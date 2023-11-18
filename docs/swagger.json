@@ -1,0 +1,308 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is a simple example NodeJS API project to demonstrate Swagger Documentation",
+    "version": "1.0.0",
+    "title": "Vwatch Api's Docs",
+    "contact": {
+      "email": "Vwatch@gmail.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "tags": [
+    {
+      "name": "Anime",
+      "description": "All Anime Api's"
+    },
+    {
+      "name": "Scripts",
+      "description": "All Bhws Api's"
+    },
+    {
+      "name": "Bhws",
+      "description": "All Bhws Api's"
+    }
+  ],
+  "schemes": ["http", "https"],
+  "host": "localhost:3000/api",
+  "securityDefinitions": {
+    "userToken": {
+      "type": "apiKey",
+      "name": "accessToken",
+      "in": "header"
+    }
+  },
+  "basePath": "/",
+  "security": [
+    {
+      "userToken": []
+    }
+  ],
+  "paths": {
+    "/anime/content-listing": {
+      "post": {
+        "tags": ["Anime"],
+        "summary": "homescreen all data",
+        "description": "pages of homescreen",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "formData",
+            "enum": [
+              "recent-release",
+              "latest-episodes",
+              "romance",
+              "movies",
+              "dub",
+              "upcoming"
+            ],
+            "description": "filter type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "formData",
+            "description": "start pagination",
+            "required": true,
+            "default": 0,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/anime/initial-call": {
+      "post": {
+        "tags": ["Anime"],
+        "summary": "homescreen all data",
+        "description": "pages of homescreen",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/anime/search-anime": {
+      "post": {
+        "tags": ["Anime"],
+        "summary": "homescreen all data",
+        "description": "pages of homescreen",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "formData",
+            "description": "search query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "start",
+            "in": "formData",
+            "description": "start pagination",
+            "required": true,
+            "default": 0,
+            "type": "string"
+          },
+          {
+            "name": "end",
+            "in": "formData",
+            "description": "end pagination",
+            "required": true,
+            "default": 10,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/anime/content-by-id": {
+      "post": {
+        "tags": ["Anime"],
+        "summary": "homescreen all data",
+        "description": "pages of homescreen",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "contentId",
+            "in": "formData",
+            "description": "id of content",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/scripts/update-incomplete-anime": {
+      "post": {
+        "tags": ["Scripts"],
+        "summary": "For fetch latest episodes",
+        "description": "update incomplete anime",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "limitPrRound",
+            "in": "formData",
+            "description": "limit of resolved content in a round",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/scripts/update-myAnimeList-data": {
+      "post": {
+        "tags": ["Scripts"],
+        "summary": "For fetch latest episodes",
+        "description": "update incomplete anime",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "limitPrRound",
+            "in": "formData",
+            "description": "limit of resolved content in a round",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/scripts/update-anime-filter-adder": {
+      "post": {
+        "tags": ["Scripts"],
+        "summary": "set anime filters",
+        "description": "new anime adder auomatically",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "formData",
+            "description": "limit of scraping",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/scripts/yearly-anime-updater": {
+      "post": {
+        "tags": ["Scripts"],
+        "summary": "set anime filters",
+        "description": "new anime adder auomatically",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "formData",
+            "description": "year for scraping",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "formData",
+            "description": "quantity of anime for scraping for particular year",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/scripts/merge-with-myanimelist": {
+      "post": {
+        "tags": ["Scripts"],
+        "summary": "merge fresh content with myanime list and save in db",
+        "description": "new anime advance date fetched and save auomatically",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "formData",
+            "description": "start from",
+            "default": 0,
+            "type": "string"
+          },
+          {
+            "name": "limitPrRound",
+            "in": "formData",
+            "description": "limitPrRound for myanimelist",
+            "default": 1,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}
