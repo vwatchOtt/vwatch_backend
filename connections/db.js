@@ -1,8 +1,8 @@
 const mongoose = require('mongoose')
-// ;('mongodb://127.0.0.1:27017/vwatch')
-// ;('mongodb+srv://funtogetherhope:togetherHope@cluster0.tlbh4qf.mongodb.net/funTogether')
+// mongodb://vwatch.in:27017/vwatch
+// mongodb://127.0.0.1:27017/vwatch
 mongoose
-  .connect('mongodb://127.0.0.1:27017/vwatch')
+  .connect('mongodb://vwatch.in:27017/vwatch')
   .then(() => {
     console.log('Connection is set.')
   })

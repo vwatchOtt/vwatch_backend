@@ -26,8 +26,8 @@
       "description": "All Bhws Api's"
     }
   ],
-  "schemes": ["http", "https"],
-  "host": "localhost:3000/api",
+  "schemes": ["https", "http"],
+  "host": "vwatch.in/api",
   "securityDefinitions": {
     "userToken": {
       "type": "apiKey",
