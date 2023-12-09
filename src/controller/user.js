@@ -4,6 +4,7 @@ const { resp } = require('../utility/resp')
 const jwt = require('jsonwebtoken')
 const Friends = require('../schema/friends')
 const Content = require('../schema/content')
+const { generateRandomString } = require('../utility/helperFunc')
 
 exports.socialSignin = async (req, res) => {
   const token = req.body.token
@@ -32,9 +33,12 @@ exports.socialSignin = async (req, res) => {
       },
       'supersecret'
     )
-    let user = await User.findOne({ email })
+    let user = await User.findOne({ email }).lean(true)
     const toBeUpdate = {
       accessToken: accessToken,
+    }
+    if (!user.profileId) {
+      toBeUpdate.profileId = generateRandomString(10)
     }
     if (!user) {
       toBeUpdate.username = `user_${Math.floor(
@@ -47,6 +51,7 @@ exports.socialSignin = async (req, res) => {
     } else {
       toBeUpdate.name = payload.name
     }
+
     user = await User.findOneAndUpdate({ email: email }, toBeUpdate, {
       upsert: true,
       new: true,
@@ -109,41 +114,20 @@ exports.isValidUsername = async (req, res) => {
   }
 }
 
-exports.searchByUsername = async (req, res) => {
+exports.searchUser = async (req, res) => {
   try {
-    const alternateStatus = {
-      pending: 'waiting', //
-      accepted: 'accepted',
-    }
-    const data = await User.find({
+    const user = await User.findOne({
       _id: {
         $ne: req.userData._id,
       },
-      username: new RegExp(req.query.username, 'i'),
+      profileId: req.query.profileId,
     }).lean(true)
-    const userPromises = data.map(async (user) => {
-      user.status = 'unknown'
-      const isHeSendMe = await Friends.findOne({
-        user: req.userData._id,
-        friend: user._id,
-      }).lean(true)
-      if (isHeSendMe) {
-        user.status = alternateStatus[isHeSendMe.status]
-        user.friendDoc_id = isHeSendMe._id
-      } else {
-        const isISendBefore = await Friends.findOne({
-          user: user._id,
-          friend: req.userData._id,
-        }).lean(true)
-        if (isISendBefore) {
-          user.status = isISendBefore.status
-          user.friendDoc_id = isISendBefore._id
-        }
-      }
-      return user
-    })
-    const users = await Promise.all(userPromises)
-    return resp.success(res, '', users)
+    const requestProgress = await Friends.findOne({
+      user: req.userData._id,
+      friend: user._id,
+    }).lean(true)
+    user.status = requestProgress?.status || null
+    return resp.success(res, '', user)
   } catch (error) {
     return resp.unknown(res, error.message)
   }
@@ -151,27 +135,22 @@ exports.searchByUsername = async (req, res) => {
 
 exports.sendFriendRequest = async (req, res) => {
   try {
-    const isHesendMeAnyRequest = await Friends.findOne({
+    const fetchStatus = await Friends.findOne({
       user: req.userData._id,
       friend: req.body.friend,
     }).lean(true)
-    if (isHesendMeAnyRequest) {
-      return resp.unknown(
-        res,
-        'You have already recieve a request from this user'
-      )
+    if (fetchStatus) {
+      return resp.unknown(res, 'Request already exist')
     }
-    const isIsendThisRequestBefor = await Friends.findOne({
-      friend: req.userData._id,
-      user: req.body.friend,
-    }).lean(true)
-    if (isIsendThisRequestBefor) {
-      return resp.unknown(res, 'You have already send a request for this user')
-    }
+    await Friends.create({
+      user: req.userData._id,
+      friend: req.body.friend,
+      status: 'pending',
+    })
     await Friends.create({
       user: req.body.friend,
       friend: req.userData._id,
-      status: 'pending',
+      status: 'waiting-for-acceptance',
     })
     return resp.success(res, '')
   } catch (error) {
@@ -181,7 +160,11 @@ exports.sendFriendRequest = async (req, res) => {
 
 exports.rejectFriendRequest = async (req, res) => {
   try {
-    await Friends.findByIdAndDelete(req.body._id)
+    const data = await Friends.findByIdAndDelete(req.body._id)
+    await Friends.findByIdAndDelete({
+      user: data.friend,
+      friend: data.user,
+    })
     return resp.success(res, '')
   } catch (error) {
     return resp.unknown(res, error.message)
@@ -194,19 +177,19 @@ exports.acceptfriendRequest = async (req, res) => {
     if (!data) {
       return resp.unknown(res, 'There is no friend request for accept')
     }
-    const bondId = [...Array(16)]
-      .map(() => Math.random().toString(36)[2])
-      .join('')
-    await Friends.findByIdAndUpdate(req.body._id, {
+
+    const mydata = await Friends.findByIdAndUpdate(req.body._id, {
       status: 'accepted',
-      bondId: bondId,
     }).lean(true)
-    await Friends.create({
-      user: data.friend,
-      friend: data.user,
-      status: 'accepted',
-      bondId: bondId,
-    })
+    await Friends.findOneAndUpdate(
+      {
+        user: mydata.friend,
+        friend: mydata.user,
+      },
+      {
+        status: 'accepted',
+      }
+    )
     return resp.success(res, '')
   } catch (error) {
     return resp.unknown(res, error.message)
@@ -222,13 +205,6 @@ exports.friendsListing = async (req, res) => {
       .populate('friend')
       .lean(true)
     return resp.success(res, '', frnds)
-  } catch (error) {
-    return resp.unknown(res, error.message)
-  }
-}
-exports.createRoom = async (req, res) => {
-  try {
-    return resp.success(res, '')
   } catch (error) {
     return resp.unknown(res, error.message)
   }

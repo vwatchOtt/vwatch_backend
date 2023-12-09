@@ -31,11 +31,7 @@ router.post('/logout', Auth.verifyToken, userController.logout)
 
 router.get('/isValidUsername', userController.isValidUsername)
 
-router.get(
-  '/searchByusername',
-  Auth.verifyToken,
-  userController.searchByUsername
-)
+router.get('/searchUser', Auth.verifyToken, userController.searchUser)
 router.post(
   '/sendFrndRequest',
   Auth.verifyToken,
@@ -49,9 +45,8 @@ router.post(
 )
 router.get('/myfrnds', Auth.verifyToken, userController.friendsListing)
 router.post(
-  '/ignoreFrndRequest',
+  '/rejectFriendRequest',
   Auth.verifyToken,
   userController.rejectFriendRequest
 )
-router.post('/createRoom', Auth.verifyToken, userController.createRoom)
 module.exports = router

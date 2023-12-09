@@ -15,10 +15,8 @@ const friendSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'rejected'],
-      default: 'pending',
+      enum: ['pending', 'waiting-for-acceptance', 'accepted', 'rejected'],
     },
-    bondId: String,
   },
   {
     timestamps: true,

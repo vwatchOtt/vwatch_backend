@@ -2,16 +2,9 @@ const axios = require('axios')
 const { sendTelegramLog } = require('./sendTeleLogs')
 const natural = require('natural')
 
-exports.generateRandomString = (len) => {
-  let text = ''
-  const possible = '123456789'
-
-  for (let i = 0; i < len; i++)
-    text += possible.charAt(Math.floor(Math.random() * possible.length))
-
-  return text
+exports.generateRandomString = (length) => {
+  return Array.from({ length }, () => Math.floor(Math.random() * 10)).join('')
 }
-
 exports.successCall = async (
   url,
   header = {
