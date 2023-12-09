@@ -145,6 +145,7 @@ exports.searchUser = async (req, res) => {
           email: 1,
           profilePic: 1,
           name: 1,
+          friendshipId: { $arrayElemAt: ['$friendship._id', 0] },
           status: {
             $ifNull: [{ $arrayElemAt: ['$friendship.status', 0] }, null],
           },
