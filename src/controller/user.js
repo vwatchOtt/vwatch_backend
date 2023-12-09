@@ -4,7 +4,6 @@ const { resp } = require('../utility/resp')
 const jwt = require('jsonwebtoken')
 const Friends = require('../schema/friends')
 const Content = require('../schema/content')
-const { generateRandomString } = require('../utility/helperFunc')
 
 exports.socialSignin = async (req, res) => {
   const token = req.body.token
@@ -36,9 +35,6 @@ exports.socialSignin = async (req, res) => {
     let user = await User.findOne({ email }).lean(true)
     const toBeUpdate = {
       accessToken: accessToken,
-    }
-    if (!user.profileId) {
-      toBeUpdate.profileId = generateRandomString(10)
     }
     if (!user) {
       toBeUpdate.username = `user_${Math.floor(
@@ -116,18 +112,47 @@ exports.isValidUsername = async (req, res) => {
 
 exports.searchUser = async (req, res) => {
   try {
-    const user = await User.findOne({
-      _id: {
-        $ne: req.userData._id,
+    const search = req.body.search
+    const usersWithStatus = await User.aggregate([
+      {
+        $match: {
+          _id: { $ne: req.userData._id },
+          username: { $regex: new RegExp(search, 'i') },
+        },
       },
-      profileId: req.query.profileId,
-    }).lean(true)
-    const requestProgress = await Friends.findOne({
-      user: req.userData._id,
-      friend: user._id,
-    }).lean(true)
-    user.status = requestProgress?.status || null
-    return resp.success(res, '', user)
+      {
+        $lookup: {
+          from: 'friends',
+          let: { friendId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$user', req.userData._id] },
+                    { $eq: ['$friend', '$$friendId'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'friendship',
+        },
+      },
+      {
+        $project: {
+          username: 1,
+          email: 1,
+          profilePic: 1,
+          name: 1,
+          status: {
+            $ifNull: [{ $arrayElemAt: ['$friendship.status', 0] }, null],
+          },
+        },
+      },
+    ])
+
+    return resp.success(res, '', usersWithStatus)
   } catch (error) {
     return resp.unknown(res, error.message)
   }
