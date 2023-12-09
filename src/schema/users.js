@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema(
   {
     accessToken: String,
     verificationCode: String,
-    profileId: String,
     name: String,
     profilePic: {
       type: String,
