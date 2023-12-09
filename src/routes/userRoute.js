@@ -31,7 +31,7 @@ router.post('/logout', Auth.verifyToken, userController.logout)
 
 router.get('/isValidUsername', userController.isValidUsername)
 
-router.get('/searchUser', Auth.verifyToken, userController.searchUser)
+router.post('/searchUser', Auth.verifyToken, userController.searchUser)
 router.post(
   '/sendFrndRequest',
   Auth.verifyToken,
