@@ -20,7 +20,6 @@
     "natural": "^6.5.0",
     "node-cron": "^3.0.2",
     "playwright": "^1.32.1",
-    "socket.io": "^4.7.2",
     "swagger": "^0.7.5",
     "swagger-ui-express": "^4.6.2"
   },

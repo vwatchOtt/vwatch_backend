@@ -4,7 +4,7 @@ const config = {
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36',
   ANIME_BASE_URL: 'https://www9.gogoanimes.fi/',
 
-  GIT_TOKEN: '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',
+  GIT_TOKEN: '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',
   DOMAIN: 'https://www.vwatch.in/',
   GOOGLE_CLIENT_ID:
     '663950802173-mokaduddfefd1gq4offe46f16o5c9ivu.apps.googleusercontent.com',
