@@ -13,6 +13,7 @@ const friendSchema = new mongoose.Schema(
       ref: 'users',
       required: true,
     },
+    conversationId: String,
     status: {
       type: String,
       enum: ['pending', 'waiting-for-acceptance', 'accepted', 'rejected'],

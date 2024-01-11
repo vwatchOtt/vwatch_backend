@@ -131,14 +131,14 @@ exports.homeScreen = async (req, res) => {
     let sorting = { releasedYear: -1 }
     switch (filter) {
       case 'recent-release':
-        query.createdAt = {
-          $gt: new Date(`${new Date().getFullYear()}-01-01T00:00:00Z`),
-        }
+        // query.createdAt = {
+        //   $gt: new Date(`${new Date().getFullYear()}-01-01T00:00:00Z`),
+        // }
         break
       case 'latest-episodes':
-        query.updatedAt = {
-          $gt: new Date(`${new Date().getFullYear()}-01-01T00:00:00Z`),
-        }
+        // query.updatedAt = {
+        //   $gt: new Date(`${new Date().getFullYear()}-01-01T00:00:00Z`),
+        // }
         break
       case 'romance':
         query.categories = {

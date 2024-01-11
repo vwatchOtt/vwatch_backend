@@ -4,6 +4,8 @@ const { resp } = require('../utility/resp')
 const jwt = require('jsonwebtoken')
 const Friends = require('../schema/friends')
 const Content = require('../schema/content')
+const { generateConversationId } = require('../utility/helperFunc')
+const { createFireUser } = require('../../firebase/operation')
 
 exports.socialSignin = async (req, res) => {
   const token = req.body.token
@@ -47,7 +49,13 @@ exports.socialSignin = async (req, res) => {
     } else {
       toBeUpdate.name = payload.name
     }
-
+    if (!user.fireId) {
+      toBeUpdate.fireId = await createFireUser({
+        email: payload.email,
+        status: 'offline',
+      })
+    }
+    console.log(toBeUpdate.fireId)
     user = await User.findOneAndUpdate({ email: email }, toBeUpdate, {
       upsert: true,
       new: true,
@@ -203,9 +211,10 @@ exports.acceptfriendRequest = async (req, res) => {
     if (!data) {
       return resp.unknown(res, 'There is no friend request for accept')
     }
-
+    const conversationId = generateConversationId()
     const mydata = await Friends.findByIdAndUpdate(req.body._id, {
       status: 'accepted',
+      conversationId,
     }).lean(true)
     await Friends.findOneAndUpdate(
       {
@@ -213,6 +222,7 @@ exports.acceptfriendRequest = async (req, res) => {
         friend: mydata.user,
       },
       {
+        conversationId,
         status: 'accepted',
       }
     )
@@ -228,8 +238,10 @@ exports.friendsListing = async (req, res) => {
       user: req.userData._id,
       status: 'accepted',
     })
+      .lean(true)
       .populate('friend')
       .lean(true)
+
     return resp.success(res, '', frnds)
   } catch (error) {
     return resp.unknown(res, error.message)

@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    fireId: String,
     subscription: {
       type: String,
       default: null,

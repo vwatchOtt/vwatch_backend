@@ -8,6 +8,7 @@ const config = {
   DOMAIN: 'https://www.vwatch.in/',
   GOOGLE_CLIENT_ID:
     '663950802173-mokaduddfefd1gq4offe46f16o5c9ivu.apps.googleusercontent.com',
+  CHATTING_hISTORY_LIMIT: 100,
   TELEGRAM: {
     ongoingAnime: {
       token: '6584505752:AAHxflBipA9Im_WORKD0hq7M_Mu8L6kGQcs',

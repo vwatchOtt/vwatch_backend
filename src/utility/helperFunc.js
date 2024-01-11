@@ -81,3 +81,28 @@ exports.processPromisesInChunks = async (promises, chunkSize) => {
 
   return resolvedPromises
 }
+exports.generateConversationId = () => {
+  // Get the current timestamp
+  const timestamp = new Date().getTime()
+
+  // Generate a random number (you can customize the range if needed)
+  const randomNum = Math.floor(Math.random() * 1000)
+
+  // Concatenate the timestamp and random number to create a unique ID
+  const conversationId = `${timestamp}-${randomNum}`
+
+  return conversationId
+}
+
+exports.formatTimestamp = (timestamp) => {
+  console.log(timestamp)
+  if (timestamp) {
+    const date = timestamp.toDate()
+    const hours = date.getHours()
+    const minutes = date.getMinutes()
+    const ampm = hours >= 12 ? 'pm' : 'am'
+    const formattedHours = hours % 12 || 12
+    return `${formattedHours}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`
+  }
+  return ''
+}
