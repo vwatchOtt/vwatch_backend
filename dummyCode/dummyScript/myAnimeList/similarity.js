@@ -1,4 +1,4 @@
-const natural = require('natural')
+// const natural = require('natural')
 const sendTelegramLog = require('../telegramlogs')
 
 // Function to calculate Levenshtein distance

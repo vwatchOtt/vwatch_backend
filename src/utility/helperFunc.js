@@ -1,6 +1,6 @@
 const axios = require('axios')
 const { sendTelegramLog } = require('./sendTeleLogs')
-const natural = require('natural')
+// const natural = require('natural')
 
 exports.generateRandomString = (length) => {
   return Array.from({ length }, () => Math.floor(Math.random() * 10)).join('')
