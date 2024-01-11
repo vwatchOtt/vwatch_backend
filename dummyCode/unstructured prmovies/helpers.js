@@ -2,7 +2,7 @@ const axios = require('axios')
 const config = require('../../config')
 const cheerio = require('cheerio')
 const Constants = require('./constants')
-const { chromium } = require('playwright')
+// const { chromium } = require('playwright')
 const path = require('path')
 const splitStringToArray = (s) => {
   if (typeof s !== 'string') {
