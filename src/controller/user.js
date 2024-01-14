@@ -120,7 +120,9 @@ exports.isValidUsername = async (req, res) => {
 
 exports.searchUser = async (req, res) => {
   try {
-    const search = req.body.search
+    const { search, page } = req.body
+    const end = 20
+    const start = page * end
     const usersWithStatus = await User.aggregate([
       {
         $match: {
@@ -148,6 +150,12 @@ exports.searchUser = async (req, res) => {
         },
       },
       {
+        $skip: start,
+      },
+      {
+        $limit: end,
+      },
+      {
         $project: {
           username: 1,
           email: 1,
@@ -160,8 +168,16 @@ exports.searchUser = async (req, res) => {
         },
       },
     ])
-
-    return resp.success(res, '', usersWithStatus)
+    const contentsCount = await User.count({
+      _id: { $ne: req.userData._id },
+      username: { $regex: new RegExp(search, 'i') },
+    })
+    const pages = Math.ceil(contentsCount / end) - 1
+    return resp.success(res, '', {
+      users: usersWithStatus,
+      pages,
+      currentPage: page,
+    })
   } catch (error) {
     return resp.unknown(res, error.message)
   }

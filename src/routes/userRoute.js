@@ -31,7 +31,17 @@ router.post('/logout', Auth.verifyToken, userController.logout)
 
 router.get('/isValidUsername', userController.isValidUsername)
 
-router.post('/searchUser', Auth.verifyToken, userController.searchUser)
+router.post(
+  '/searchUser',
+  celebrate({
+    body: Joi.object().keys({
+      search: Joi.string().required(),
+      page: Joi.number().min(0).required(),
+    }),
+  }),
+  Auth.verifyToken,
+  userController.searchUser
+)
 router.post(
   '/sendFrndRequest',
   Auth.verifyToken,
