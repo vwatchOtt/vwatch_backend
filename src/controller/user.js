@@ -49,7 +49,7 @@ exports.socialSignin = async (req, res) => {
     } else {
       toBeUpdate.name = payload.name
     }
-    if (!user.fireId) {
+    if (!user?.fireId) {
       toBeUpdate.fireId = await createFireUser({
         email: payload.email,
         status: 'offline',
