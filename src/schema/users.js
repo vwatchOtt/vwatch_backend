@@ -34,6 +34,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       uniquue: true,
     },
+    setting: {
+      showOnline: Boolean,
+      showScreenStatus: Boolean,
+      showFriendsList: Boolean,
+      showWatchHistory: Boolean,
+      showSaves: Boolean,
+    },
   },
   {
     timestamps: true,
