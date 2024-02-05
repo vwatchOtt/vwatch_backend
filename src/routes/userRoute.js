@@ -25,6 +25,13 @@ router.post(
   }),
   userController.socialSignin
 )
+
+router.post(
+  '/update-user',
+
+  userController.updateUser
+)
+
 router.get('/app-first-call', Auth.verifyToken, userController.appFirstCall)
 
 router.post('/logout', Auth.verifyToken, userController.logout)

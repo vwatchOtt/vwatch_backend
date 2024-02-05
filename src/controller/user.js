@@ -55,7 +55,6 @@ exports.socialSignin = async (req, res) => {
         status: 'offline',
       })
     }
-    console.log(toBeUpdate.fireId)
     user = await User.findOneAndUpdate({ email: email }, toBeUpdate, {
       upsert: true,
       new: true,
@@ -109,10 +108,7 @@ exports.isValidUsername = async (req, res) => {
     const data = await User.findOne({
       username: req.query.username,
     })
-    if (data) {
-      return resp.unknown(res, 'username already exist')
-    }
-    return resp.success(res, '')
+    return resp.success(res, '', { isValid: data ? false : true })
   } catch (error) {
     return resp.unknown(res, error.message)
   }
@@ -310,5 +306,15 @@ exports.initialCall = async (req, res) => {
     return resp.success(res, '', responseData)
   } catch (error) {
     return resp.fail(res)
+  }
+}
+
+exports.updateUser = async (req, res) => {
+  try {
+    const userId = req.userData._id
+    await User.findByIdAndUpdate(userId, req.body)
+    return resp.success(res, '')
+  } catch (error) {
+    return resp.fail(res, '', error)
   }
 }
