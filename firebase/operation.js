@@ -1,5 +1,5 @@
 const admin = require('firebase-admin')
-const serviceAccount = require('../vwatch-fiebase.json') // Replace with your own service account key
+const serviceAccount = require('../vwatch-firebase.json') // Replace with your own service account key
 const {
   chattingCollection,
   userCollection,

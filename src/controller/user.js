@@ -105,10 +105,16 @@ exports.appFirstCall = async (req, res) => {
 
 exports.isValidUsername = async (req, res) => {
   try {
-    const data = await User.findOne({
-      username: req.query.username,
+    let data
+    if (req.query.type == 'username') {
+      data = await User.findOne({
+        username: req.query.username,
+      })
+    }
+    return resp.success(res, '', {
+      isValid: data ? false : true,
+      reason: 'Space not allowed',
     })
-    return resp.success(res, '', { isValid: data ? false : true })
   } catch (error) {
     return resp.unknown(res, error.message)
   }
@@ -263,8 +269,9 @@ exports.friendsListing = async (req, res) => {
 //For feth filters data and filters values
 exports.initialCall = async (req, res) => {
   try {
-    const { need } = req.body
+    const { need, expoToken } = req.body
     const responseData = {}
+
     if (need == 'categories') {
       responseData[need] = await Content.distinct('categories')
     }
@@ -303,6 +310,9 @@ exports.initialCall = async (req, res) => {
     if (need == 'profile') {
       responseData[need] = req.userData
     }
+    await User.findByIdAndUpdate(req.userData._id, {
+      expoToken,
+    })
     return resp.success(res, '', responseData)
   } catch (error) {
     return resp.fail(res)

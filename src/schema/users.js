@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       uniquue: true,
     },
+    expoToken: String,
     setting: {
       showOnline: Boolean,
       showScreenStatus: Boolean,

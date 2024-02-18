@@ -11,6 +11,7 @@ router.post(
       need: Joi.string()
         .valid('profile', 'categories', 'homescreen')
         .required(),
+      expoToken: Joi.string().optional(),
     }),
   }),
   Auth.verifyToken,
