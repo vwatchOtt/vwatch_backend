@@ -28,7 +28,7 @@ async function sendNotification(message) {
 
     const config = {
       method: 'post',
-      url: 'https://fcm.googleapis.com/v1/projects/vwatch-4ee06/messages:send', // FCM endpoint
+      url: 'https://fcm.googleapis.com/v1/projects/vwatch-2024/messages:send', // FCM endpoint
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`, // Include the access token in the Authorization header
@@ -55,7 +55,7 @@ const notificationMessage = {
       body: 'Body of the notification',
     },
     token:
-      'e64-B1qZTieskL32qsmUVq:APA91bEvG3QAxelyro7gORlwOCWpajTP0XFDdYPpwup-iMhH6IuokkeftHpEKRRj-Bkx_8VwNxZKGeEK34qTvGLSk5pUXMqRm3zGaXFDLm-H-rzdgv3fKyg9c96T4yGempIOe1HNuoS6', // FCM token of the device to receive the notification
+      'dnsXdvCbSJuNn1wcc9GhB6:APA91bGExtu_0f6zxYqIaHLxKG6DodGjpDRKAr2Emj5CLSXErUYkWu36tiJbC0ICgcet9wO8SdeqUFtNCVTeZkue5idgHc4hbuYw1R9El0X9B1mDddZASZa0DjVFNFA3TwR0oeR3HH30', // FCM token of the device to receive the notification
   },
 }
 sendNotification(notificationMessage)
