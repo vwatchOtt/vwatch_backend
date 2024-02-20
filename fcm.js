@@ -54,7 +54,8 @@ const notificationMessage = {
       title: 'Title of the notification',
       body: 'Body of the notification',
     },
-    token: 'ExponentPushToken[TS81InOyT-p7ZSVJETUBPf]', // FCM token of the device to receive the notification
+    token:
+      'e64-B1qZTieskL32qsmUVq:APA91bEvG3QAxelyro7gORlwOCWpajTP0XFDdYPpwup-iMhH6IuokkeftHpEKRRj-Bkx_8VwNxZKGeEK34qTvGLSk5pUXMqRm3zGaXFDLm-H-rzdgv3fKyg9c96T4yGempIOe1HNuoS6', // FCM token of the device to receive the notification
   },
 }
 sendNotification(notificationMessage)
