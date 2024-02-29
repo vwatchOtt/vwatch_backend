@@ -6,6 +6,7 @@ const Friends = require('../schema/friends')
 const Content = require('../schema/content')
 const { generateConversationId } = require('../utility/helperFunc')
 const { createFireUser } = require('../../firebase/operation')
+const { connectedUsers } = require('../../sockets/handler')
 
 exports.socialSignin = async (req, res) => {
   const token = req.body.token
@@ -252,14 +253,21 @@ exports.acceptfriendRequest = async (req, res) => {
 
 exports.friendsListing = async (req, res) => {
   try {
-    const frnds = await Friends.find({
+    let frnds = await Friends.find({
       user: req.userData._id,
       status: 'accepted',
     })
       .lean(true)
       .populate('friend')
       .lean(true)
-
+    frnds = frnds.map((my) => {
+      if (connectedUsers.has(my.friend._id.toString()))
+        my.friend.fireStore = { status: 'online' }
+      else {
+        my.friend.fireStore = { status: 'offline' }
+      }
+      return my
+    })
     return resp.success(res, '', frnds)
   } catch (error) {
     return resp.unknown(res, error.message)
