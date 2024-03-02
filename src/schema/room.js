@@ -2,20 +2,21 @@ const mongoose = require('mongoose')
 
 const roomSchema = new mongoose.Schema(
   {
+    roomId: String,
     creator: {
       type: mongoose.Types.ObjectId,
       ref: 'users',
     },
-    joiner: [
+    type: {
+      type: String,
+      enum: ['custom', 'internal'],
+    },
+    duration: { type: Number, default: 0 },
+    content: Object,
+    participant: [
       {
-        user: {
-          type: mongoose.Types.ObjectId,
-          ref: 'users',
-        },
-        status: {
-          type: String,
-          enum: ['Pending', 'Ready', 'Watching', 'Left'],
-        },
+        type: mongoose.Types.ObjectId,
+        ref: 'users',
       },
     ],
   },

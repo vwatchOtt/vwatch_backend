@@ -2,5 +2,8 @@
   "http.proxySupport": "off",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "html.format.indentHandlebars": false
+  "html.format.indentHandlebars": false,
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
