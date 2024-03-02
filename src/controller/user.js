@@ -6,7 +6,7 @@ const Friends = require('../schema/friends')
 const Content = require('../schema/content')
 const { generateConversationId } = require('../utility/helperFunc')
 const { createFireUser } = require('../../firebase/operation')
-const { connectedUsers } = require('../../sockets/handler')
+const { connectedUsers } = require('../../sockets/cache')
 
 exports.socialSignin = async (req, res) => {
   const token = req.body.token
