@@ -29,10 +29,17 @@ const triggerMyStatusToMyFriends = async (
  * Sets the status of the message to 'sent' and emits the message to the receiver's socket.
  * Waits for acknowledgement from the receiver within 5 seconds and returns the result.
  */
-const transferMessageToTheReciever = async (conversationId, message, io) => {
-  const reciverSocketId = connectedUsers.get(message.reciever)
+const transferMessageToTheReciever = async (
+  socket,
+  conversationId,
+  message
+) => {
+  const reciverSocketId =
+    message.type == 'one-to-one'
+      ? connectedUsers.get(message.reciever)
+      : conversationId
   message.status = 'sent'
-  const isRecieved = await io
+  const isRecieved = await socket.broadcast
     .timeout(5000)
     .to(reciverSocketId)
     .emitWithAck('listen-one-to-one-messages', {
@@ -127,11 +134,11 @@ const screenNameUpdates = (socket, io, lastScreen) => {
 /**
  * Transfers the given message to the receiver in the conversation.
  */
-const messageEvent = async (io, conversationId, message) => {
+const messageEvent = async (io, socket, conversationId, message) => {
   const isRecieved = await transferMessageToTheReciever(
+    socket,
     conversationId,
-    message,
-    io
+    message
   )
   if (isRecieved) {
     const markAsDeliver = await markAsDelivered(conversationId, message, io)

@@ -14,6 +14,7 @@ router.post(
       content: Joi.object()
         .keys({
           videoId: Joi.string(),
+          contentId: Joi.string(),
           contentName: Joi.string(),
           streamUrl: Joi.string(),
         })
@@ -26,13 +27,26 @@ router.post(
   roomController.createRoom
 )
 router.get(
-  '/rooms',
+  '/myRooms',
   celebrate({
-    body: Joi.object().keys({
-      createdBy: Joi.string().valid('my', 'others').required(),
+    query: Joi.object().keys({
+      createdBy: Joi.string().valid('my', 'others').optional(),
+      roomId: Joi.string().optional(),
     }),
   }),
   Auth.verifyToken,
   roomController.myRooms
+)
+
+router.post(
+  '/kickOutFromRoom',
+  celebrate({
+    body: Joi.object().keys({
+      user: Joi.string().required(),
+      roomId: Joi.string().required(),
+    }),
+  }),
+  Auth.verifyToken,
+  roomController.kickOutFromRoom
 )
 module.exports = router

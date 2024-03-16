@@ -14,9 +14,10 @@ const screenNames = {
 }
 const connectedUsers = new Map()
 const currentScreens = new Map()
-
+const roomsData = {}
 module.exports = {
   connectedUsers,
   currentScreens,
   screenNames,
+  roomsData,
 }

@@ -3,6 +3,7 @@ const serviceAccount = require('../vwatch-firebase.json') // Replace with your o
 const {
   chattingCollection,
   userCollection,
+  roomCollection,
 } = require('../src/utility/firestoreCollections')
 const { CHATTING_hISTORY_LIMIT } = require('../config')
 const { formatTimestamp } = require('../src/utility/helperFunc')
@@ -16,6 +17,8 @@ if (!admin.apps.length) {
 // Reference to the Firestore collection
 const messagesCollection = admin.firestore().collection(chattingCollection)
 const usersCollectionRef = admin.firestore().collection(userCollection)
+const roomCollectionRef = admin.firestore().collection(roomCollection)
+
 // Fetch data from Firestore
 const fetchConversationMessages = async (conversationId) => {
   try {
@@ -45,7 +48,14 @@ const createFireUser = async (userData) => {
     throw error
   }
 }
+const updateRoom = async (roomId, status) => {
+  const roomDocRef = roomCollectionRef.doc(roomId)
+
+  // Update the room document with the new data
+  await roomDocRef.update(status)
+}
 module.exports = {
   fetchConversationMessages,
   createFireUser,
+  updateRoom,
 }
