@@ -1,10 +1,5 @@
 const { triggerNotification } = require('../src/utility/helperFunc')
-const {
-  connectedUsers,
-  currentScreens,
-  screenNames,
-  session,
-} = require('./cache')
+const { connectedUsers, currentScreens, session } = require('./cache')
 const { myFriends } = require('./dbOperation')
 const NOTI_CATEGORIES = {
   CHATTING: 'chatting',
