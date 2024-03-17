@@ -107,20 +107,9 @@ exports.formatTimestamp = (timestamp) => {
   return ''
 }
 
-// triggerNotification([
-//   {
-//     categoryId: 'chatting',
-//     sound: 'default',
-//     to: 'ExponentPushToken[gxsK2_E1ew76pMhT_FcbZ0]', // Get the device token from the request body
-//     title: 'hi', // Get the notification title from the request body
-//     body: 'jaadju?', // Get the notification body from the request body
-//     data: {}, // Get additional data for the notification from the request body
-//   },
-// ])
-
 exports.triggerNotification = async (expoData) => {
-  const data = JSON.stringify(expoData) // Convert the `expoData` object to a JSON string
-
+  const data = JSON.stringify([expoData]) // Convert the `expoData` object to a JSON string
+  console.log(expoData)
   const config = {
     method: 'post',
     maxBodyLength: Infinity,
@@ -130,7 +119,6 @@ exports.triggerNotification = async (expoData) => {
     },
     data: data, // Set the data to be sent in the request body as the JSON string
   }
-
   const resp = await axios(config) // Send the request to trigger the notification
   console.log(resp.data)
   return resp.data // Return the response data

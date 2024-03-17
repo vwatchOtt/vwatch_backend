@@ -1,6 +1,15 @@
-const { connectedUsers, currentScreens } = require('./cache')
+const { triggerNotification } = require('../src/utility/helperFunc')
+const {
+  connectedUsers,
+  currentScreens,
+  screenNames,
+  session,
+} = require('./cache')
 const { myFriends } = require('./dbOperation')
-
+const NOTI_CATEGORIES = {
+  CHATTING: 'chatting',
+  ROOM: 'room',
+}
 /**
  * Notifies the online status and last screen of a user to their friends.
  */
@@ -140,7 +149,27 @@ const messageEvent = async (io, socket, conversationId, message) => {
     conversationId,
     message
   )
+
   if (isRecieved) {
+    if (message.reciever && currentScreens.get(message.reciever)) {
+      let recieverScreen = currentScreens.get(message.reciever).split('||')
+      recieverScreen = recieverScreen[1]
+      if (recieverScreen != conversationId) {
+        triggerNotification({
+          channelId: 'default',
+          categoryId: NOTI_CATEGORIES.CHATTING,
+          sound: 'default',
+          to: session[message.reciever].expoToken,
+          title: session[message.reciever].username,
+          body: message.text,
+          data: {
+            pageId: conversationId,
+            type: 'conversation',
+            itemId: message.reciever,
+          },
+        })
+      }
+    }
     const markAsDeliver = await markAsDelivered(conversationId, message, io)
     console.log(markAsDeliver)
   }

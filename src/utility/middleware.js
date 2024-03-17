@@ -1,21 +1,31 @@
 const jwt = require('jsonwebtoken') // used to create, sign, and verify tokens
 const Users = require('../schema/users')
 const { resp } = require('./resp')
+const { session } = require('../../sockets/cache')
 
 exports.verifyToken = (req, res, next) => {
   try {
     const token = req.headers.accesstoken
     if (!token) return resp.unauthorized(res, '')
-    jwt.verify(token, 'supersecret', async function (err) {
+    jwt.verify(token, 'supersecret', async function (err, decode) {
       if (err) return resp.unauthorized(res, '')
-      const user = await Users.findOne({
-        accessToken: token,
-      }).lean(true)
-      if (!user) return resp.unauthorized(res, '')
-      if (!user.profilePic) {
-        user.profilePic = 'https://www.vwatch.in/statics?type=profilePic'
+      const userId = decode.user
+      if (!session[userId]) {
+        const user = await Users.findOne({
+          accessToken: token,
+        }).lean(true)
+        if (!user) return resp.unauthorized(res, '')
+        if (!user.profilePic) {
+          user.profilePic = 'https://www.vwatch.in/statics?type=profilePic'
+        }
+        session[userId] = {
+          _id: user._id,
+          username: user.username,
+          expoToken: user.expoToken,
+        }
       }
-      req.userData = user
+
+      req.userData = session[userId]
       next()
     })
   } catch (error) {
@@ -39,17 +49,24 @@ exports.socketMiddlewere = (socket, next) => {
   const token = socket.handshake.query?.token
   console.log(token, 'token---')
   if (!token) return false
-  jwt.verify(token, 'supersecret', async function (err) {
-    if (err) return false
-    const user = await Users.findOne(
-      {
+
+  jwt.verify(token, 'supersecret', async function (err, decode) {
+    if (err) {
+      return false
+    }
+    const userId = decode.user
+    if (!session[userId]) {
+      const user = await Users.findOne({
         accessToken: token,
-      },
-      { _id: 1 }
-    ).lean(true)
-    socket.userData = user._id
-    console.log(user, 'userData')
-    if (!user) return false
+      }).lean(true)
+      if (!user) return false
+      session[userId] = {
+        _id: user._id,
+        username: user.username,
+        expoToken: user.expoToken,
+      }
+    }
+    socket.userData = session[userId]
     next()
   })
 }

@@ -13,6 +13,7 @@ const screenNames = {
   CREATE_ROOM: 'CreateRoom',
 }
 const connectedUsers = new Map()
+const session = {}
 const currentScreens = new Map()
 const roomsData = {}
 module.exports = {
@@ -20,4 +21,5 @@ module.exports = {
   currentScreens,
   screenNames,
   roomsData,
+  session,
 }

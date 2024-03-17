@@ -39,7 +39,6 @@ const circuitListener = (socket, io) => {
     socket.leave(roomId) // Leave the room
   })
   socket.on('roomUpdates', ({ roomId, userId, duration, reactionText }) => {
-    console.log(reactionText)
     if (reactionText) {
       io.to(roomId).emit('room-events', { userId, reactionText })
     } else {

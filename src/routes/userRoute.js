@@ -29,8 +29,6 @@ router.post(
 
 router.post('/update-user', Auth.verifyToken, userController.updateUser)
 
-router.get('/app-first-call', Auth.verifyToken, userController.appFirstCall)
-
 router.post('/logout', Auth.verifyToken, userController.logout)
 
 router.get('/isValidUsername', userController.isValidUsername)

@@ -29,13 +29,15 @@ exports.socialSignin = async (req, res) => {
     if (!payload) {
       return resp.taken(res, '')
     }
+
+    let user = await User.findOne({ email }).lean(true)
     const accessToken = jwt.sign(
       {
         email: payload.email,
+        user: user._id,
       },
       'supersecret'
     )
-    let user = await User.findOne({ email }).lean(true)
     const toBeUpdate = {
       accessToken: accessToken,
     }
@@ -86,21 +88,6 @@ exports.logout = async (req, res) => {
     return res.status(400).json({
       message: e.message,
     })
-  }
-}
-
-exports.appFirstCall = async (req, res) => {
-  try {
-    req.userData.maintinense = null
-    req.userData.screenBlockNeedTOPurchasePlan = null
-    return resp.success(res, '', req.userData)
-  } catch (error) {
-    req.userData.maintinense = null
-    return resp.success(
-      res,
-      'App is under maintinense please be patient will fix soon',
-      req.userData
-    )
   }
 }
 
@@ -279,7 +266,6 @@ exports.initialCall = async (req, res) => {
   try {
     const { need, expoToken } = req.body
     const responseData = {}
-
     if (need == 'categories') {
       responseData[need] = await Content.distinct('categories')
     }
@@ -316,11 +302,15 @@ exports.initialCall = async (req, res) => {
       ]
     }
     if (need == 'profile') {
-      responseData[need] = req.userData
+      const profile = await User.findByIdAndUpdate(
+        req.userData._id,
+        {
+          expoToken,
+        },
+        { new: true }
+      )
+      responseData[need] = profile
     }
-    await User.findByIdAndUpdate(req.userData._id, {
-      expoToken,
-    })
     return resp.success(res, '', responseData)
   } catch (error) {
     return resp.fail(res)
