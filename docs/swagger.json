@@ -27,7 +27,8 @@
     }
   ],
   "schemes": ["https", "http"],
-  "host": "vwatch.in/api",
+  "host1": "vwatch.in/api",
+  "host": "localhost:3000/api",
   "securityDefinitions": {
     "userToken": {
       "type": "apiKey",
@@ -291,6 +292,63 @@
             "in": "formData",
             "description": "limitPrRound for myanimelist",
             "default": 1,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/anime/watch-history": {
+      "get": {
+        "tags": ["Anime"],
+        "summary": "homescreen all data",
+        "description": "pages of homescreen",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Anime"],
+        "summary": "homescreen all data",
+        "description": "pages of homescreen",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "contentId",
+            "in": "formData",
+            "description": "contentId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "lastDuration",
+            "in": "formData",
+            "description": "lastDuration",
+            "type": "string"
+          },
+          {
+            "name": "episodeId",
+            "in": "formData",
+            "description": "episodeId",
+            "type": "string"
+          },
+          {
+            "name": "episodeNumber",
+            "in": "formData",
+            "description": "episodeNumber",
             "type": "string"
           }
         ],

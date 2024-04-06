@@ -2,7 +2,13 @@ const express = require('express')
 // const Auth = require('../utility/middleware')
 const { Joi, celebrate } = require('celebrate')
 
-const { homeScreen, searchAnime, contentById } = require('../controller/anime')
+const {
+  homeScreen,
+  searchAnime,
+  contentById,
+  fetchWatchHistory,
+  watchHistory,
+} = require('../controller/anime')
 const { verifyToken } = require('../utility/middleware')
 const router = express.Router()
 
@@ -38,8 +44,9 @@ router.post(
     }),
   }),
   verifyToken,
-
   contentById
 )
+router.get('/watch-history', verifyToken, fetchWatchHistory)
+router.post('/watch-history', verifyToken, watchHistory)
 
 module.exports = router

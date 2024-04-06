@@ -4,6 +4,7 @@ const {
   screenNameUpdates,
   messageEvent,
   manageTyping,
+  onBackground,
 } = require('./socketOperations')
 
 const circuitListener = (socket, io) => {
@@ -38,14 +39,15 @@ const circuitListener = (socket, io) => {
     console.log(`User ${userId} left room ${roomId}`)
     socket.leave(roomId) // Leave the room
   })
-  socket.on('roomUpdates', ({ roomId, userId, duration, reactionText }) => {
-    if (reactionText) {
-      io.to(roomId).emit('room-events', { userId, reactionText })
+  socket.on('roomUpdates', ({ roomId, userId, value, type }) => {
+    if (type == 'reaction') {
+      io.to(roomId).emit('room-events', { userId, value, type })
     } else {
-      socket.broadcast
-        .to(roomId)
-        .emit('room-events', { userId, duration, reactionText })
+      socket.broadcast.to(roomId).emit('room-events', { userId, value, type })
     }
+  })
+  socket.on('on-background', ({ isOnline }) => {
+    onBackground(socket, io)
   })
 }
 

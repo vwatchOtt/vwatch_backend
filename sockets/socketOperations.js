@@ -178,6 +178,21 @@ const manageTyping = (io, socket, reciever, conversationId) => {
     isOnline: 'online',
   })
 }
+
+const onBackground = (socket, io) => {
+  const lastScreen = currentScreens.get(socket.userData?._id.toString())
+  currentScreens.set(
+    socket.userData?._id.toString(),
+    `${lastScreen}-background`
+  )
+  triggerMyStatusToMyFriends(
+    socket.userData?._id.toString(),
+    'offline',
+    lastScreen,
+    io
+  )
+  console.log('User Background', socket.id)
+}
 module.exports = {
   triggerMyStatusToMyFriends,
   transferMessageToTheReciever,
@@ -187,4 +202,5 @@ module.exports = {
   screenNameUpdates,
   messageEvent,
   manageTyping,
+  onBackground,
 }

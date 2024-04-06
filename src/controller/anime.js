@@ -1,6 +1,7 @@
 const { default: mongoose } = require('mongoose')
 const Content = require('../schema/content')
 const { resp } = require('../utility/resp')
+const watchHistory = require('../schema/watchHistory')
 
 //For mixed content and add subdub linking
 const linkingContent = async (contents) => {
@@ -243,11 +244,136 @@ exports.contentById = async (req, res) => {
       {
         $match: { _id: new mongoose.Types.ObjectId(contentId) },
       },
-      animeDetailedBoxProjection,
+      {
+        $lookup: {
+          from: 'watchhistories',
+          let: { contentId: '$contentId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$$contentId', '$contentId'] },
+                    {
+                      $eq: [
+                        '$userId',
+                        new mongoose.Types.ObjectId(req.userData._id),
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'watch',
+        },
+      },
+      {
+        $project: {
+          ...animeDetailedBoxProjection['$project'],
+          history: { $arrayElemAt: ['$watch.history', 0] },
+        },
+      },
     ])
 
     return resp.success(res, '', content[0])
   } catch (error) {
     return resp.fail(res, error.message)
+  }
+}
+
+//fetch watch history
+exports.fetchWatchHistory = async (req, res) => {
+  try {
+    const userId = req.userData._id
+    const data = await watchHistory.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'contents',
+          localField: 'contentId',
+          foreignField: 'contentId',
+          as: 'temp',
+        },
+      },
+      {
+        $unwind: '$temp',
+      },
+      {
+        $replaceRoot: { newRoot: { $mergeObjects: ['$temp', '$$ROOT'] } },
+      },
+      {
+        $project: {
+          ...animeSmallBoxProjection['$project'],
+          history: 1,
+        },
+      },
+      {
+        $sort: {
+          updatedAt: -1,
+        },
+      },
+    ])
+    const saves = []
+    const history = []
+    data.map((w) => {
+      if (w.history.length > 0) {
+        history.push(w)
+      } else {
+        saves.push(w)
+      }
+    })
+    return resp.success(res, '', { watchLater: saves, watchHistory: history })
+  } catch (error) {
+    return resp.fail(res, '', error)
+  }
+}
+//save content
+exports.watchHistory = async (req, res) => {
+  try {
+    const { contentId, lastDuration, episodeId, episodeNumber } = req.body
+    const userId = req.userData._id
+    const watchData = await watchHistory
+      .findOne({
+        contentId,
+        userId,
+      })
+      .lean(true)
+    const history = watchData?.history || []
+    const updateIndex = history.findIndex((ep) => ep.episodeId == episodeId)
+    if (episodeId && updateIndex == -1) {
+      history.push({
+        lastDuration,
+        episodeId,
+        episodeNumber,
+      })
+    }
+    if (episodeId && updateIndex != -1) {
+      history[updateIndex] = {
+        ...history[updateIndex],
+        ...(lastDuration && { lastDuration }),
+        ...(episodeNumber && { episodeNumber }),
+      }
+    }
+    await watchHistory.findOneAndUpdate(
+      {
+        contentId,
+        userId,
+      },
+      {
+        history,
+      },
+      {
+        upsert: true,
+      }
+    )
+
+    return resp.success(res, '')
+  } catch (error) {
+    return resp.fail(res, '', error)
   }
 }

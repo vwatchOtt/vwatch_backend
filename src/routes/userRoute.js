@@ -61,4 +61,5 @@ router.post(
   Auth.verifyToken,
   userController.rejectFriendRequest
 )
+
 module.exports = router
