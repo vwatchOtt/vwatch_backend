@@ -46,7 +46,7 @@ const circuitListener = (socket, io) => {
       socket.broadcast.to(roomId).emit('room-events', { userId, value, type })
     }
   })
-  socket.on('on-background', ({ isOnline }) => {
+  socket.on('on-background', () => {
     onBackground(socket, io)
   })
 }

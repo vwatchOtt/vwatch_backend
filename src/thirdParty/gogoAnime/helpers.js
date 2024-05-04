@@ -11,7 +11,12 @@ exports.generateEncryptAjaxParameters = async ($, id) => {
     iv: keys.iv,
   })
 
-  const script = $('script[data-name="episode"]').data().value
+  const temp = $('script[data-name="episode"]').data()
+  if (!temp) {
+    console.log('fault')
+  }
+  const script = temp.value
+
   const token = CryptoJS.AES['decrypt'](script, keys.key, {
     iv: keys.iv,
   }).toString(CryptoJS.enc.Utf8)

@@ -1,14 +1,16 @@
 const cheerio = require('cheerio')
 
 const { USER_AGENT } = require('../../../config')
-const { successCall } = require('../../utility/helperFunc')
+const {
+  successCall,
+  resolveWithConcurrencyLimit,
+} = require('../../utility/helperFunc')
 const {
   generateEncryptAjaxParameters,
   decryptEncryptAjaxResponse,
 } = require('./helpers')
-const ajax_url = 'https://ajax.gogo-load.com/'
+const ajax_url = 'https://ajax.gogocdn.net/'
 const list_episodes_url = `${ajax_url}ajax/load-list-episode`
-const BASE_URL2 = 'https://gogoanime.gg/'
 const defaultLimit = 9999999999
 const Content = require('../../schema/content')
 const { sendTelegramLog } = require('../../utility/sendTeleLogs')
@@ -25,7 +27,7 @@ exports.structureAnime = (content, filter = []) => {
     title: content.title,
     type: content.type,
     releasedYear: content.releasedYear,
-    status: content.status.toLowerCase(),
+    status: content.status?.toLowerCase(),
     categories: content.categories,
     otherTitle: content.otherNames,
     description: content.description,
@@ -33,7 +35,7 @@ exports.structureAnime = (content, filter = []) => {
     latestEpisode: content.totalEpisodes,
     isMovie: isMovie,
     defaultStreamingUrl: '',
-    episodes: [],
+    episodes: content.episodesList,
     currentLang: content.currectLanguage,
     filters: filter,
   }
@@ -44,7 +46,7 @@ exports.scrapeStreamingUrl = async ({ id }) => {
     if (!id) {
       throw Error('Episode id not found')
     }
-    const epPage = await successCall(BASE_URL2 + id)
+    const epPage = await successCall(config.ANIME_BASE_URL + id)
     const $ = cheerio.load(epPage.data)
 
     const server = $('#load_anime > div > div > iframe').attr('src')
@@ -72,18 +74,24 @@ exports.scrapeStreamingUrl = async ({ id }) => {
     if (!res.source)
       return { error: 'No sources found!! Try different source.' }
 
-    return {
-      defaultStreamingUrl: server,
-      permanentStreamingUrl: res['source'][0].file,
-      temporaryStreamingUrl: res['source_bk'][0].file,
+    const response = { defaultStreamingUrl: server }
+    if (!res['source_bk']) {
+      response.permanentStreamingUrl = res.source.find(
+        (item) => (item.default = 'true')
+      )
+      response.temporaryStreamingUrl = 'not found'
+    } else {
+      response.permanentStreamingUrl = res['source'][0].file
+      response.temporaryStreamingUrl = res['source_bk'][0].file
     }
+    return response
   } catch (err) {
     return false
   }
 }
+
 exports.scrapeAnimeDetails = async (id) => {
   try {
-    const categories = []
     const epList = []
     const langModifyr = {
       sub: 'eng-sub',
@@ -91,32 +99,51 @@ exports.scrapeAnimeDetails = async (id) => {
       hindi: 'hindi-dub',
     }
     const animePageTest = await successCall(
-      `https://gogoanime.gg/category/${id}`
+      `${config.ANIME_BASE_URL}category/${id}`
     )
     if (!animePageTest) {
       return false
     }
     const $ = cheerio.load(animePageTest.data)
+    const animeInfoContainer = $('.anime_info_body_bg')
 
-    const title = $('div.anime_info_body_bg > h1').text()
+    // Extract information from the single container
+    const title = animeInfoContainer.find('h1').text().trim()
+    const type = animeInfoContainer
+      .find('.type')
+      .eq(0)
+      .text()
+      .replace('Type:', '')
+      .trim()
+    const plotSummary = animeInfoContainer.find('.description').text().trim()
+    const genre = animeInfoContainer
+      .find('.type')
+      .eq(2)
+      .text()
+      .replace('Genre:', '')
+      .trim()
+      .split(',')
+      .map((genre) => genre.trim())
+    const released = animeInfoContainer
+      .find('.type')
+      .eq(3)
+      .text()
+      .replace('Released:', '')
+      .trim()
+    const status = animeInfoContainer
+      .find('.type')
+      .eq(4)
+      .text()
+      .replace('Status:', '')
+      .trim()
+    const otherName = animeInfoContainer
+      .find('.other-name')
+      .text()
+      .replace('Other name:', '')
+      .trim()
+      .split(',')
+      .map((name) => name.trim())
     const animeImage = $('div.anime_info_body_bg > img').attr('src')
-    const type = $('div.anime_info_body_bg > p:nth-child(4) > a').text()
-    const desc = $('div.anime_info_body_bg > p:nth-child(5)')
-      .text()
-      .replace('Plot Summary: ', '')
-    const releasedYear = $('div.anime_info_body_bg > p:nth-child(7)')
-      .text()
-      .replace('Released: ', '')
-    const status = $('div.anime_info_body_bg > p:nth-child(8) > a').text()
-    const otherName = $('div.anime_info_body_bg > p:nth-child(9)')
-      .text()
-      .replace('Other name: ', '')
-      .replace(/;/g, ',')
-
-    $('div.anime_info_body_bg > p:nth-child(6) > a').each((i, elem) => {
-      categories.push($(elem).attr('title').trim())
-    })
-
     const ep_start = $('#episode_page > li').first().find('a').attr('ep_start')
     const ep_end = $('#episode_page > li').last().find('a').attr('ep_end')
     const movie_id = $('#movie_id').attr('value')
@@ -139,25 +166,45 @@ exports.scrapeAnimeDetails = async (id) => {
         url: BASE_URL + $(el).find('a').attr('href').trim(),
       })
     })
+    const latestEpisodePromises = epList.map(async (episode) => {
+      // const streamingData = await this.scrapeStreamingUrl({
+      //   id: episode.episodeId,
+      // })
+      // if (
+      //   !streamingData.defaultStreamingUrl ||
+      //   !streamingData.permanentStreamingUrl ||
+      //   !streamingData.temporaryStreamingUrl
+      // ) {
+      //   console.log(`red alert video not scraped - ${episode.episodeId}`)
+      //   throw 'something went wrong'
+      // }
+      // episode.defaultStreamingUrl = streamingData.defaultStreamingUrl
+      // episode.permanentStreamingUrl = streamingData.permanentStreamingUrl
+      // episode.temporaryStreamingUrl = streamingData.temporaryStreamingUrl
+      // episode.updatedAt = new Date()
+      console.log('episode refreshed - ', episode.episodeId)
+      return episode
+    })
+
+    const episodesList = await Promise.all(latestEpisodePromises)
     return {
       id: id,
       title: title.toString(),
       type: type.toString(),
-      releasedYear: releasedYear.toString(),
+      releasedYear: released.toString(),
       status: status.toString(),
-      categories: categories,
+      categories: genre,
       otherNames: otherName,
-      description: desc.toString(),
+      description: plotSummary.toString(),
       img: animeImage.toString(),
       totalEpisodes: ep_end,
-      episodesList: epList,
+      episodesList: episodesList,
       ...(currectLanguage && { currectLanguage: currectLanguage }),
     }
   } catch (err) {
     return false
   }
 }
-
 exports.animeContentIdTodb = async (contentId, filter = []) => {
   try {
     await sendTelegramLog(
@@ -447,17 +494,20 @@ exports.topAiring = async (limit = defaultLimit) => {
 }
 
 //year bases scrape
-exports.yearlyAnime = async (year, limit = defaultLimit) => {
+exports.scrapeAnimesByPages = async (limit = defaultLimit) => {
   try {
-    let pageNum = 1
+    let pageNum = 0
     let hasMore = true
     let allDataOfThisYear = []
+    //const recently_updated = 'recently_updated'
+    const recently_added = 'recently_added'
+
     while (hasMore) {
-      if (allDataOfThisYear.length >= limit) {
+      if (allDataOfThisYear.length >= limit && limit != 'all') {
         break
       }
       const popularPage = await successCall(
-        `https://gogoanime3.net/filter.html?year%5B%5D=${year}&sort=title_az&page=${pageNum}`
+        `${config.ANIME_BASE_URL}filter.html?sort=${recently_added}&page=${pageNum}`
       )
       if (!popularPage) {
         hasMore = false
@@ -465,12 +515,13 @@ exports.yearlyAnime = async (year, limit = defaultLimit) => {
       }
       const $ = cheerio.load(popularPage.data)
       const isValidPage = $('li.selected>a').attr('href')
-      if (!isValidPage) {
+      if (!isValidPage && pageNum != 1) {
         hasMore = false
         continue
       }
       const allAnimeBoxes = $('div.last_episodes > ul > li')
-      let allAnimeBoxesPromises = allAnimeBoxes.map(async (i, el) => {
+      let pageData = []
+      allAnimeBoxes.map((i, el) => {
         const basicDetatils = {
           id: $(el).find('p.name > a').attr('href').split('/')[2],
           title: $(el).find('p.name > a').attr('title'),
@@ -481,6 +532,9 @@ exports.yearlyAnime = async (year, limit = defaultLimit) => {
             .replace('Released: ', '')
             .trim(),
         }
+        pageData.push(basicDetatils)
+      })
+      const pageDataPromises = pageData.map(async (basicDetatils) => {
         const advanceData = await this.scrapeAnimeDetails(basicDetatils.id)
         if (!advanceData) {
           await sendTelegramLog(
@@ -488,21 +542,15 @@ exports.yearlyAnime = async (year, limit = defaultLimit) => {
             'animeFilter'
           )
         }
-        advanceData.episodesList = advanceData.episodesList.reverse()
+        if (!advanceData?.episodesList) {
+          console.log('test')
+        }
+        advanceData.episodesList = advanceData?.episodesList?.reverse()
         const content = { ...basicDetatils, ...advanceData }
         return content
       })
-      allAnimeBoxesPromises = await Promise.allSettled(allAnimeBoxesPromises)
-      const fulfilledPromises = allAnimeBoxesPromises
-        .filter((result) => result.status === 'fulfilled')
-        .map((result) => result.value)
-      if (fulfilledPromises.length != allAnimeBoxes.length) {
-        await sendTelegramLog(
-          'one of any promise is rejected during fetch yearly data',
-          'animeFilter'
-        )
-      }
-      allDataOfThisYear = allDataOfThisYear.concat(fulfilledPromises)
+      pageData = await resolveWithConcurrencyLimit(pageDataPromises, 10)
+      allDataOfThisYear = allDataOfThisYear.concat(pageData)
       pageNum++
     }
     return allDataOfThisYear

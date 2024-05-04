@@ -1,27 +1,26 @@
 const Content = require('../src/schema/content')
 const {
-  yearlyAnime,
+  scrapeAnimesByPages,
   structureAnime,
 } = require('../src/thirdParty/gogoAnime/scraping')
 const { resp } = require('../src/utility/resp')
 const { sendTelegramLog } = require('../src/utility/sendTeleLogs')
 
-exports.yearlyAnimeUpdater = async (req, res) => {
+exports.scrapeAnimesByPagesScript = async (req, res) => {
   try {
-    const { year, limit } = req.body
-    resp.success(
-      res,
-      `yearly anime worker is started ,Year ${year}-Limit ${limit}`
-    )
+    const { limit } = req.body
+
+    resp.success(res, `yearly anime worker is started -Limit ${limit}`)
     await sendTelegramLog(
-      `yearly anime worker is started ,Year ${year}-Limit ${limit}`,
+      `yearly anime worker is started -Limit ${limit}`,
       'yearlyAnimeLogs'
     )
-    const yearlyData = await yearlyAnime(year, limit)
+    const yearlyData = await scrapeAnimesByPages(limit)
     const promises = yearlyData.map(async (anime) => {
       const isExist = await Content.findOne({ contentId: anime.id }).lean(true)
       if (!isExist) {
         const structuredData = structureAnime(anime)
+        structuredData.lastEpisodeRefreshedAt = new Date()
         await Content.create(structuredData)
         sendTelegramLog(
           `Found anime from yearlyAnime and updated in db - ${anime.id}`,
@@ -32,6 +31,7 @@ exports.yearlyAnimeUpdater = async (req, res) => {
       return true
     })
     await Promise.all(promises)
+    console.log('done')
     await sendTelegramLog('End yearlyAnime with Success ', 'yearlyAnimeLogs')
   } catch (error) {
     sendTelegramLog(

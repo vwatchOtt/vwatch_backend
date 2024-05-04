@@ -42,6 +42,8 @@ const userSchema = new mongoose.Schema(
       showWatchHistory: Boolean,
       showSaves: Boolean,
     },
+    lastOnlineAt: Date,
+    lastScreen: String,
   },
   {
     timestamps: true,

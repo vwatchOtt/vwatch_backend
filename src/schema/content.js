@@ -27,7 +27,7 @@ const contentSchema = new mongoose.Schema(
       enum: ['ongoing', 'upcoming', 'completed'],
     },
     categories: [],
-    otherTitle: String,
+    otherTitle: [String],
     description: String,
     image: String,
     latestEpisode: String,
@@ -61,6 +61,7 @@ const contentSchema = new mongoose.Schema(
       type: String,
       enum: ['mx', 'gogoanime'],
     },
+    lastEpisodeRefreshedAt: Date,
   },
   {
     timestamps: true,

@@ -1,24 +1,25 @@
 const express = require('express')
 const router = express.Router()
-const { updateIncompleteAnime } = require('../../crons/animeOngoingUpdate')
+const { refreshAnimeUrl } = require('../../crons/refreshAnimeStreamingUrl.js')
 const { verifyAdmin } = require('../utility/middleware')
 const { updateMyAnimeList } = require('../../crons/animeDetailsUpdate')
 const { animeFilterAdder } = require('../../crons/animeFiltersUpdater')
-const { yearlyAnimeUpdater } = require('../../crons/animeYearlyUpdates')
+const { scrapeAnimesByPagesScript } = require('../../crons/scrapeAnimePages')
 const { Joi, celebrate } = require('celebrate')
 const {
   mergeFreshAnimeWithMyAnimeList,
 } = require('../../crons/mergeWithMyanimeList')
 
 router.post(
-  '/update-incomplete-anime',
+  '/refresh-anime-url',
   celebrate({
     body: Joi.object().keys({
       limitPrRound: Joi.number().min(1).required(),
+      start: Joi.number().min(0).required(),
     }),
   }),
   verifyAdmin,
-  updateIncompleteAnime
+  refreshAnimeUrl
 )
 router.post(
   '/update-myAnimeList-data',
@@ -41,15 +42,14 @@ router.post(
   animeFilterAdder
 )
 router.post(
-  '/yearly-anime-updater',
+  '/scrape-anime-by-pages',
   celebrate({
     body: Joi.object().keys({
-      year: Joi.number().min(1900).required(),
-      limit: Joi.number().min(10).required(),
+      limit: Joi.string().required(),
     }),
   }),
   verifyAdmin,
-  yearlyAnimeUpdater
+  scrapeAnimesByPagesScript
 )
 
 router.post(
@@ -63,6 +63,5 @@ router.post(
   verifyAdmin,
   mergeFreshAnimeWithMyAnimeList
 )
-
 
 module.exports = router

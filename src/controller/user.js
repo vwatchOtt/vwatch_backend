@@ -31,16 +31,8 @@ exports.socialSignin = async (req, res) => {
     }
 
     let user = await User.findOne({ email }).lean(true)
-    const accessToken = jwt.sign(
-      {
-        email: payload.email,
-        user: user._id,
-      },
-      'supersecret'
-    )
-    const toBeUpdate = {
-      accessToken: accessToken,
-    }
+    const toBeUpdate = {}
+
     if (!user) {
       toBeUpdate.username = `user_${Math.floor(
         Math.random() * 1000000
@@ -62,6 +54,24 @@ exports.socialSignin = async (req, res) => {
       upsert: true,
       new: true,
     })
+    const accessToken = jwt.sign(
+      {
+        email: payload.email,
+        user: user._id,
+      },
+      'supersecret'
+    )
+
+    user = await User.findOneAndUpdate(
+      { email: email },
+      {
+        accessToken: accessToken,
+      },
+      {
+        upsert: true,
+        new: true,
+      }
+    )
     return resp.success(res, '', user)
   } catch (error) {
     return resp.fail(res, error.message)

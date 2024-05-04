@@ -166,7 +166,7 @@
         }
       }
     },
-    "/scripts/update-incomplete-anime": {
+    "/scripts/refresh-anime-url": {
       "post": {
         "tags": ["Scripts"],
         "summary": "For fetch latest episodes",
@@ -177,6 +177,14 @@
             "name": "limitPrRound",
             "in": "formData",
             "description": "limit of resolved content in a round",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "start",
+            "in": "formData",
+            "description": "start from",
+            "default": "0",
             "required": true,
             "type": "string"
           }
@@ -241,20 +249,13 @@
         }
       }
     },
-    "/scripts/yearly-anime-updater": {
+    "/scripts/scrape-anime-by-pages": {
       "post": {
         "tags": ["Scripts"],
         "summary": "set anime filters",
         "description": "new anime adder auomatically",
         "produces": ["application/json"],
         "parameters": [
-          {
-            "name": "year",
-            "in": "formData",
-            "description": "year for scraping",
-            "required": true,
-            "type": "string"
-          },
           {
             "name": "limit",
             "in": "formData",

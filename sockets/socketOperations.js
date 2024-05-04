@@ -1,3 +1,4 @@
+const User = require('../src/schema/users')
 const { triggerNotification } = require('../src/utility/helperFunc')
 const { connectedUsers, currentScreens, session } = require('./cache')
 const { myFriends } = require('./dbOperation')
@@ -109,15 +110,20 @@ const onConnect = (socket, io) => {
  * Triggers the status update to the user's friends with the offline status and last screen.
  * Logs the disconnection event with the socket ID.
  */
-const onDisconnect = (socket, io) => {
+const onDisconnect = async (socket, io) => {
   connectedUsers.delete(socket.userData?._id.toString())
   const lastScreen = currentScreens.get(socket.userData?._id.toString())
+
   triggerMyStatusToMyFriends(
     socket.userData?._id.toString(),
     'offline',
     lastScreen,
     io
   )
+  await User.findByIdAndUpdate(socket.userData?._id, {
+    lastOnlineAt: new Date(),
+    lastScreen,
+  })
   console.log('User Disconnected', socket.id)
 }
 

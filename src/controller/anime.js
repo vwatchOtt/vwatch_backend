@@ -240,20 +240,19 @@ exports.searchAnime = async (req, res) => {
 exports.contentById = async (req, res) => {
   try {
     const { contentId } = req.body
-    const content = await Content.aggregate([
+    let content = await Content.aggregate([
       {
-        $match: { _id: new mongoose.Types.ObjectId(contentId) },
+        $match: { contentId },
       },
       {
         $lookup: {
           from: 'watchhistories',
-          let: { contentId: '$contentId' },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$$contentId', '$contentId'] },
+                    { $eq: ['$contentId', contentId] },
                     {
                       $eq: [
                         '$userId',
@@ -265,18 +264,27 @@ exports.contentById = async (req, res) => {
               },
             },
           ],
-          as: 'watch',
+          as: 'watchHistory',
         },
       },
       {
         $project: {
           ...animeDetailedBoxProjection['$project'],
-          history: { $arrayElemAt: ['$watch.history', 0] },
+          watchHistory: 1,
         },
       },
     ])
-
-    return resp.success(res, '', content[0])
+    content = content[0]
+    content.lastWatched = content.watchHistory[0]?.lastWatched || 0
+    content.episodes = content.episodes.map((ep) => {
+      const obj = content.watchHistory[0]?.history.find(
+        (episode) => episode.episodeId == ep.episodeId
+      )
+      ep.lastDuration = obj?.lastDuration || null
+      ep.totalDuration = obj?.totalDuration || null
+      return ep
+    })
+    return resp.success(res, '', content)
   } catch (error) {
     return resp.fail(res, error.message)
   }
@@ -310,6 +318,7 @@ exports.fetchWatchHistory = async (req, res) => {
         $project: {
           ...animeSmallBoxProjection['$project'],
           history: 1,
+          lastWatched: 1,
         },
       },
       {
@@ -335,7 +344,8 @@ exports.fetchWatchHistory = async (req, res) => {
 //save content
 exports.watchHistory = async (req, res) => {
   try {
-    const { contentId, lastDuration, episodeId, episodeNumber } = req.body
+    const { contentId, lastDuration, episodeId, episodeNumber, totalDuration } =
+      req.body
     const userId = req.userData._id
     const watchData = await watchHistory
       .findOne({
@@ -350,13 +360,15 @@ exports.watchHistory = async (req, res) => {
         lastDuration,
         episodeId,
         episodeNumber,
+        totalDuration: totalDuration,
       })
     }
     if (episodeId && updateIndex != -1) {
       history[updateIndex] = {
         ...history[updateIndex],
+        ...(totalDuration && { totalDuration: totalDuration }),
         ...(lastDuration && { lastDuration }),
-        ...(episodeNumber && { episodeNumber }),
+        ...(episodeNumber != undefined && { episodeNumber }),
       }
     }
     await watchHistory.findOneAndUpdate(
@@ -365,6 +377,7 @@ exports.watchHistory = async (req, res) => {
         userId,
       },
       {
+        lastWatched: episodeNumber,
         history,
       },
       {

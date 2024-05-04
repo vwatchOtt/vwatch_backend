@@ -1,6 +1,6 @@
 const axios = require('axios')
 const { sendTelegramLog } = require('./sendTeleLogs')
-// const natural = require('natural')
+const natural = require('natural')
 
 exports.generateRandomString = (length) => {
   return Array.from({ length }, () => Math.floor(Math.random() * 10)).join('')
@@ -48,12 +48,12 @@ exports.successCall = async (
 exports.checkApproxSimilarity = (str1, str2, str3) => {
   const similarityApprox = 1
   const data = natural.LevenshteinDistance(
-    str1.toLowerCase(),
-    str2.toLowerCase()
+    str1?.toLowerCase(),
+    str2?.toLowerCase()
   )
   const data2 = natural.LevenshteinDistance(
-    str1.toLowerCase(),
-    str3.toLowerCase()
+    str1?.toLowerCase(),
+    str3?.toLowerCase()
   )
   console.log(`matching results ${data}-${data2}`)
 
@@ -122,4 +122,25 @@ exports.triggerNotification = async (expoData) => {
   const resp = await axios(config) // Send the request to trigger the notification
   console.log(resp.data)
   return resp.data // Return the response data
+}
+
+function chunkArray(array, chunkSize) {
+  const chunkedArray = []
+
+  for (let i = 0; i < array.length; i += chunkSize) {
+    const chunk = array.slice(i, i + chunkSize)
+    chunkedArray.push(chunk)
+  }
+
+  return chunkedArray
+}
+
+exports.resolveWithConcurrencyLimit = async (promises, concurrencyLimit) => {
+  const data = []
+  const results = chunkArray(promises, concurrencyLimit)
+  for (const result of results) {
+    const resolved = await Promise.all(result)
+    data.push(...resolved)
+  }
+  return data
 }

@@ -7,11 +7,13 @@ const watchHistorySchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: 'users',
     },
+    lastWatched: Number,
     history: [
       {
         episodeId: String,
         episodeNumber: Number,
         lastDuration: Number,
+        totalDuration: Number,
       },
     ],
   },
@@ -19,6 +21,6 @@ const watchHistorySchema = new mongoose.Schema(
     timestamps: true,
   }
 )
-const watchHistory = new mongoose.model('watchHistory', watchHistorySchema)
+const watchHistory = new mongoose.model('watchhistories', watchHistorySchema)
 
 module.exports = watchHistory
