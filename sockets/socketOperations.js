@@ -155,6 +155,7 @@ const messageEvent = async (io, socket, conversationId, message) => {
     if (message.reciever && currentScreens.get(message.reciever)) {
       let recieverScreen = currentScreens.get(message.reciever).split('||')
       recieverScreen = recieverScreen[1]
+      console.log(recieverScreen, conversationId)
       if (recieverScreen != conversationId) {
         triggerNotification({
           channelId: 'default',
