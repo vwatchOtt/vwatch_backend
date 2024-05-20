@@ -145,8 +145,10 @@ const screenNameUpdates = (socket, io, lastScreen) => {
  * Transfers the given message to the receiver in the conversation.
  */
 const messageEvent = async (io, socket, conversationId, message) => {
-  if (message.reciever && currentScreens.get(message.reciever)) {
-    let recieverScreen = currentScreens.get(message.reciever).split('||')
+  if (message.reciever) {
+    let recieverScreen = (currentScreens.get(message.reciever) || '').split(
+      '||'
+    )
     recieverScreen = recieverScreen[1]
     if (recieverScreen != conversationId) {
       triggerNotification({
