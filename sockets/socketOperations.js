@@ -145,6 +145,25 @@ const screenNameUpdates = (socket, io, lastScreen) => {
  * Transfers the given message to the receiver in the conversation.
  */
 const messageEvent = async (io, socket, conversationId, message) => {
+  if (message.reciever && currentScreens.get(message.reciever)) {
+    let recieverScreen = currentScreens.get(message.reciever).split('||')
+    recieverScreen = recieverScreen[1]
+    if (recieverScreen != conversationId) {
+      triggerNotification({
+        channelId: 'default',
+        categoryId: NOTI_CATEGORIES.CHATTING,
+        sound: 'default',
+        to: session[message.reciever].expoToken,
+        title: session[message.reciever].username,
+        body: message.text,
+        data: {
+          pageId: conversationId,
+          type: 'conversation',
+          itemId: message.reciever,
+        },
+      })
+    }
+  }
   const isRecieved = await transferMessageToTheReciever(
     socket,
     conversationId,
@@ -152,26 +171,6 @@ const messageEvent = async (io, socket, conversationId, message) => {
   )
 
   if (isRecieved) {
-    if (message.reciever && currentScreens.get(message.reciever)) {
-      let recieverScreen = currentScreens.get(message.reciever).split('||')
-      recieverScreen = recieverScreen[1]
-      console.log(recieverScreen, conversationId)
-      if (recieverScreen != conversationId) {
-        triggerNotification({
-          channelId: 'default',
-          categoryId: NOTI_CATEGORIES.CHATTING,
-          sound: 'default',
-          to: session[message.reciever].expoToken,
-          title: session[message.reciever].username,
-          body: message.text,
-          data: {
-            pageId: conversationId,
-            type: 'conversation',
-            itemId: message.reciever,
-          },
-        })
-      }
-    }
     const markAsDeliver = await markAsDelivered(conversationId, message, io)
     console.log(markAsDeliver)
   }
