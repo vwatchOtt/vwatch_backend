@@ -150,13 +150,13 @@ const messageEvent = async (io, socket, conversationId, message) => {
       '||'
     )
     recieverScreen = recieverScreen[1]
-    if (recieverScreen != conversationId) {
+    if (recieverScreen != conversationId && session[message.reciever]) {
       triggerNotification({
         channelId: 'default',
         categoryId: NOTI_CATEGORIES.CHATTING,
         sound: 'default',
-        to: session[message.reciever].expoToken,
-        title: session[message.reciever].username,
+        to: session[message.reciever]?.expoToken,
+        title: session[message.sender]?.username,
         body: message.text,
         data: {
           pageId: conversationId,
