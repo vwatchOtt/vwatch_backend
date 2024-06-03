@@ -1,11 +1,8 @@
 const User = require('../src/schema/users')
 const { triggerNotification } = require('../src/utility/helperFunc')
+const { NOTI_CATEGORIES } = require('../src/utility/notiConstants')
 const { connectedUsers, currentScreens, session } = require('./cache')
 const { myFriends } = require('./dbOperation')
-const NOTI_CATEGORIES = {
-  CHATTING: 'chatting',
-  ROOM: 'room',
-}
 /**
  * Notifies the online status and last screen of a user to their friends.
  */

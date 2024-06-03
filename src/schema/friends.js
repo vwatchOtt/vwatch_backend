@@ -18,6 +18,17 @@ const friendSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'waiting-for-acceptance', 'accepted', 'rejected'],
     },
+    iAmCallingAs: String,
+    settings: {
+      notification: {
+        type: Boolean,
+        default: true,
+      },
+      block: {
+        type: Boolean,
+        default: false,
+      },
+    },
   },
   {
     timestamps: true,

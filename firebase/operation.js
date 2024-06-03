@@ -13,7 +13,7 @@ if (!admin.apps.length) {
     databaseURL: 'https://your-project-id.firebaseio.com', // Replace with your own Firebase project URL
   })
 }
-
+const db = admin.firestore()
 // Reference to the Firestore collection
 const messagesCollection = admin.firestore().collection(chattingCollection)
 const usersCollectionRef = admin.firestore().collection(userCollection)
@@ -54,8 +54,40 @@ const updateRoom = async (roomId, status) => {
   // Update the room document with the new data
   await roomDocRef.update(status)
 }
+
+async function deleteOldDocuments() {
+  const now = admin.firestore.Timestamp.now()
+  const cutoff = new admin.firestore.Timestamp(
+    now.seconds - 24 * 60 * 60,
+    now.nanoseconds
+  )
+
+  try {
+    const querySnapshot = await roomCollectionRef
+      .where('timestamp', '<', cutoff)
+      .get()
+
+    if (querySnapshot.empty) {
+      console.log('No matching documents.')
+      return
+    }
+
+    const batch = db.batch()
+
+    querySnapshot.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    await batch.commit()
+    console.log('Documents deleted successfully.')
+  } catch (error) {
+    console.error('Error deleting documents: ', error)
+  }
+}
+// deleteOldDocuments()
 module.exports = {
   fetchConversationMessages,
   createFireUser,
   updateRoom,
+  deleteOldDocuments,
 }

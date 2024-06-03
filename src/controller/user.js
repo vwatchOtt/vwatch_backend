@@ -4,9 +4,43 @@ const { resp } = require('../utility/resp')
 const jwt = require('jsonwebtoken')
 const Friends = require('../schema/friends')
 const Content = require('../schema/content')
-const { generateConversationId } = require('../utility/helperFunc')
+const {
+  generateConversationId,
+  triggerNotification,
+} = require('../utility/helperFunc')
 const { createFireUser } = require('../../firebase/operation')
 const { connectedUsers } = require('../../sockets/cache')
+const { NOTI_CATEGORIES } = require('../utility/notiConstants')
+
+exports.editMyFriendDetails = async (req, res) => {
+  try {
+    const { action, iAmCallingAs, _id } = req.body
+    const friend = await Friends.findById(_id).lean(true)
+    if (action == 'silent') {
+      await Friends.findByIdAndUpdate(_id, {
+        'settings.notification': !friend.settings.notification,
+      })
+    }
+    if (action == 'block') {
+      await Friends.findByIdAndUpdate(_id, {
+        'settings.block': !friend.settings.block,
+      })
+    }
+    if (action == 'unfriend') {
+      await Friends.deleteMany({
+        conversationId: friend.conversationId,
+      })
+    }
+    if (action == 'editName') {
+      await Friends.findByIdAndUpdate(_id, {
+        iAmCallingAs: iAmCallingAs,
+      })
+    }
+    return resp.success(res)
+  } catch (error) {
+    return resp.fail(res, error, '')
+  }
+}
 
 exports.socialSignin = async (req, res) => {
   const token = req.body.token
@@ -185,6 +219,7 @@ exports.searchUser = async (req, res) => {
 
 exports.sendFriendRequest = async (req, res) => {
   try {
+    const frndData = await User.findById(req.body.friend).lean(true)
     const fetchStatus = await Friends.findOne({
       user: req.userData._id,
       friend: req.body.friend,
@@ -202,6 +237,19 @@ exports.sendFriendRequest = async (req, res) => {
       friend: req.userData._id,
       status: 'waiting-for-acceptance',
     })
+    triggerNotification({
+      channelId: 'default',
+      categoryId: NOTI_CATEGORIES.FRIEND_REQUEST,
+      sound: 'default',
+      to: frndData?.expoToken,
+      title: req.userData.username,
+      body: `Hey, ${frndData.name} You got a new friend request`,
+      data: {
+        pageId: null,
+        type: 'friend-request',
+        itemId: req.userData._id,
+      },
+    })
     return resp.success(res, '')
   } catch (error) {
     return resp.unknown(res, error.message)
@@ -214,6 +262,19 @@ exports.rejectFriendRequest = async (req, res) => {
     await Friends.findByIdAndDelete({
       user: data.friend,
       friend: data.user,
+    })
+    triggerNotification({
+      channelId: 'default',
+      categoryId: NOTI_CATEGORIES.FRIEND_REQUEST,
+      sound: 'default',
+      to: data?.expoToken,
+      title: req.userData.username,
+      body: `Your friend request has been rejected by ${req.userData.name}`,
+      data: {
+        pageId: null,
+        type: 'friend-request',
+        itemId: req.userData._id,
+      },
     })
     return resp.success(res, '')
   } catch (error) {
@@ -242,6 +303,19 @@ exports.acceptfriendRequest = async (req, res) => {
         status: 'accepted',
       }
     )
+    triggerNotification({
+      channelId: 'default',
+      categoryId: NOTI_CATEGORIES.FRIEND_REQUEST,
+      sound: 'default',
+      to: data?.expoToken,
+      title: req.userData.username,
+      body: `Your friend request has been accepted by ${req.userData.name}`,
+      data: {
+        pageId: null,
+        type: 'friend-request',
+        itemId: req.userData._id,
+      },
+    })
     return resp.success(res, '')
   } catch (error) {
     return resp.unknown(res, error.message)

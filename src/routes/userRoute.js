@@ -61,5 +61,10 @@ router.post(
   Auth.verifyToken,
   userController.rejectFriendRequest
 )
+router.post(
+  '/editMyFriendDetails',
+  Auth.verifyToken,
+  userController.editMyFriendDetails
+)
 
 module.exports = router
