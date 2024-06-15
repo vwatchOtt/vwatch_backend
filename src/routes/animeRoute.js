@@ -8,6 +8,7 @@ const {
   contentById,
   fetchWatchHistory,
   watchHistory,
+  getFinishedContents,
 } = require('../controller/anime')
 const { verifyToken } = require('../utility/middleware')
 const router = express.Router()
@@ -48,5 +49,6 @@ router.post(
 )
 router.get('/watch-history', verifyToken, fetchWatchHistory)
 router.post('/watch-history', verifyToken, watchHistory)
+router.get('/getFinishedContents', verifyToken, getFinishedContents)
 
 module.exports = router

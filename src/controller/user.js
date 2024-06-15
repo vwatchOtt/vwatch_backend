@@ -410,3 +410,25 @@ exports.updateUser = async (req, res) => {
     return resp.fail(res, '', error)
   }
 }
+
+exports.viewProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.query.userId)
+      .select({
+        _id: 1,
+        profilePic: 1,
+        setting: 1,
+        lastOnlineAt: 1,
+        username: 1,
+        name: 1,
+      })
+      .lean(true)
+    user.friendsCount = await Friends.count({
+      user: req.query.userId,
+      status: 'accepted',
+    })
+    return resp.success(res, '', user)
+  } catch (error) {
+    return resp.fail(res, '', error)
+  }
+}

@@ -336,7 +336,10 @@ exports.fetchWatchHistory = async (req, res) => {
         saves.push(w)
       }
     })
-    return resp.success(res, '', { watchLater: saves, watchHistory: history })
+    return resp.success(res, '', {
+      watchedContents: history,
+      watchHistory: history,
+    })
   } catch (error) {
     return resp.fail(res, '', error)
   }
@@ -386,6 +389,49 @@ exports.watchHistory = async (req, res) => {
     )
 
     return resp.success(res, '')
+  } catch (error) {
+    return resp.fail(res, '', error)
+  }
+}
+
+exports.getFinishedContents = async (req, res) => {
+  try {
+    const userId = req.query.userId
+    const data = await watchHistory.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'contents',
+          localField: 'contentId',
+          foreignField: 'contentId',
+          as: 'temp',
+        },
+      },
+      {
+        $unwind: '$temp',
+      },
+      {
+        $replaceRoot: { newRoot: { $mergeObjects: ['$temp', '$$ROOT'] } },
+      },
+      {
+        $project: {
+          ...animeSmallBoxProjection['$project'],
+          history: 1,
+          lastWatched: 1,
+        },
+      },
+      {
+        $sort: {
+          updatedAt: -1,
+        },
+      },
+    ])
+
+    return resp.success(res, '', data)
   } catch (error) {
     return resp.fail(res, '', error)
   }

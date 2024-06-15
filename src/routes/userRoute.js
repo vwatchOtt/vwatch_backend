@@ -66,5 +66,5 @@ router.post(
   Auth.verifyToken,
   userController.editMyFriendDetails
 )
-
+router.get('/viewProfile', Auth.verifyToken, userController.viewProfile)
 module.exports = router
