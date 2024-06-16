@@ -21,6 +21,7 @@ exports.scrapeAnimesByPagesScript = async (req, res) => {
       if (!isExist) {
         const structuredData = structureAnime(anime)
         structuredData.lastEpisodeRefreshedAt = new Date()
+        structuredData.fetchedFrom = 'gogoanime'
         await Content.create(structuredData)
         sendTelegramLog(
           `Found anime from yearlyAnime and updated in db - ${anime.id}`,

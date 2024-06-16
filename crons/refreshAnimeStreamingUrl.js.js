@@ -4,12 +4,18 @@ const { scrapeStreamingUrl } = require('../src/thirdParty/gogoAnime/scraping')
 const { resp } = require('../src/utility/resp')
 const { sendTelegramLog } = require('../src/utility/sendTeleLogs')
 
-const worker = async (start, limit) => {
+const worker = async (start, limit, dateFilter) => {
   try {
     await sendTelegramLog(`start-${start} from ${limit}`, 'ongoingAnime')
     const animes = await Content.find({
-      lastEpisodeRefreshedAt: { $exists: false },
-      // lastEpisodeRefreshedAt: { $lt: dateFilter },
+      $or: [
+        {
+          lastEpisodeRefreshedAt: { $exists: false },
+        },
+        {
+          lastEpisodeRefreshedAt: { $lt: dateFilter },
+        },
+      ],
     })
       .sort({ createdAt: -1 })
       .skip(start)
@@ -72,8 +78,14 @@ exports.refreshAnimeUrl = async (req, res) => {
     const dateFilter = new Date()
     dateFilter.setDate(dateFilter.getDate() - 15)
     const total = await Content.count({
-      lastEpisodeRefreshedAt: { $exists: false },
-      // lastEpisodeRefreshedAt: { $lt: dateFilter },
+      $or: [
+        {
+          lastEpisodeRefreshedAt: { $exists: false },
+        },
+        {
+          lastEpisodeRefreshedAt: { $lt: dateFilter },
+        },
+      ],
     })
     const starts = req.body.start
     const totalRecords = total

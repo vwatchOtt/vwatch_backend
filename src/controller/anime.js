@@ -2,12 +2,14 @@ const { default: mongoose } = require('mongoose')
 const Content = require('../schema/content')
 const { resp } = require('../utility/resp')
 const watchHistory = require('../schema/watchHistory')
+const config = require('../../config')
 
 //For mixed content and add subdub linking
 const linkingContent = async (contents) => {
-  const removedData = []
+  // const removedData = []
   const sturucturedContent = []
   for (const content of contents) {
+    content.image = config.ANIME_THUMBNAIL_BASE_URL + content.image.toString()
     content.linkedData = [
       {
         language: content.currentLang,
@@ -17,24 +19,24 @@ const linkingContent = async (contents) => {
         totalEpisodes: content.totalEpisodes,
       },
     ]
-    const isLinking = await Content.findOne({
-      myAnimeListId: content.myAnimeListId,
-      _id: { $ne: content._id },
-    }).lean(true)
-    if (!isLinking) {
-      sturucturedContent.push(content)
-      continue
-    }
-    removedData.push(isLinking._id.toString())
-    content.linkedData.push({
-      language: isLinking.currentLang,
-      linkedId: isLinking._id,
-      contentId: isLinking.contentId,
-      totalEpisodes: isLinking.episodes.length,
-    })
-    if (!removedData.includes(content._id.toString())) {
-      sturucturedContent.push(content)
-    }
+    // const isLinking = await Content.findOne({
+    //   myAnimeListId: content.myAnimeListId,
+    //   _id: { $ne: content._id },
+    // }).lean(true)
+    // if (!isLinking) {
+    sturucturedContent.push(content)
+    continue
+    // // }
+    // removedData.push(isLinking._id.toString())
+    // content.linkedData.push({
+    //   language: isLinking.currentLang,
+    //   linkedId: isLinking._id,
+    //   contentId: isLinking.contentId,
+    //   totalEpisodes: isLinking.episodes.length,
+    // })
+    // if (!removedData.includes(content._id.toString())) {
+    //   sturucturedContent.push(content)
+    // }
   }
   return sturucturedContent
 }
@@ -127,7 +129,7 @@ exports.homeScreen = async (req, res) => {
     const query = {
       fetchedFrom: 'gogoanime',
       status: { $ne: 'upcoming' },
-      myAnimeListId: { $exists: true },
+      // myAnimeListId: { $exists: true },
     }
     let sorting = { releasedYear: -1 }
     switch (filter) {
@@ -275,6 +277,7 @@ exports.contentById = async (req, res) => {
       },
     ])
     content = content[0]
+    content.image = config.ANIME_THUMBNAIL_BASE_URL + content.image.toString()
     content.lastWatched = content.watchHistory[0]?.lastWatched || 0
     content.episodes = content.episodes.map((ep) => {
       const obj = content.watchHistory[0]?.history.find(
@@ -330,6 +333,7 @@ exports.fetchWatchHistory = async (req, res) => {
     const saves = []
     const history = []
     data.map((w) => {
+      w.image = config.ANIME_THUMBNAIL_BASE_URL + w.image.toString()
       if (w.history.length > 0) {
         history.push(w)
       } else {
