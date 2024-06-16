@@ -3,6 +3,7 @@ const Content = require('../schema/content')
 const { resp } = require('../utility/resp')
 const watchHistory = require('../schema/watchHistory')
 const config = require('../../config')
+const { refreshAnimeEpisodes } = require('../thirdParty/gogoAnime/scraping')
 
 //For mixed content and add subdub linking
 const linkingContent = async (contents) => {
@@ -242,6 +243,26 @@ exports.searchAnime = async (req, res) => {
 exports.contentById = async (req, res) => {
   try {
     const { contentId } = req.body
+    const dateFilter = new Date()
+    dateFilter.setDate(dateFilter.getDate() - 15)
+    const isNeedToUpdate = await Content.findOne({
+      $or: [
+        {
+          contentId,
+          lastEpisodeRefreshedAt: { $exists: false },
+        },
+        {
+          contentId,
+          lastEpisodeRefreshedAt: { $lt: dateFilter },
+        },
+      ],
+    })
+      .select({ _id: 1, lastEpisodeRefreshedAt: 1 })
+      .lean(true)
+    if (isNeedToUpdate) {
+      await refreshAnimeEpisodes({ contentId, _id: isNeedToUpdate._id })
+    }
+
     let content = await Content.aggregate([
       {
         $match: { contentId },
@@ -277,6 +298,7 @@ exports.contentById = async (req, res) => {
       },
     ])
     content = content[0]
+
     content.image = config.ANIME_THUMBNAIL_BASE_URL + content.image.toString()
     content.lastWatched = content.watchHistory[0]?.lastWatched || 0
     content.episodes = content.episodes.map((ep) => {

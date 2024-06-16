@@ -561,3 +561,50 @@ exports.scrapeAnimesByPages = async (limit = defaultLimit) => {
     )
   }
 }
+
+exports.refreshAnimeEpisodes = async (element) => {
+  const advanceData = await this.scrapeAnimeDetails(element.contentId)
+  if (!advanceData) {
+    await sendTelegramLog(
+      `not able to fecth -${element.contentId}`,
+      'animeFilter'
+    )
+  }
+  if (!advanceData?.episodesList) {
+    console.log('Error')
+  }
+  element.episodes = advanceData?.episodesList?.reverse()
+  const latestEpisodePromises = element.episodes.map(async (episode) => {
+    const streamingData = await this.scrapeStreamingUrl({
+      id: episode.episodeId,
+    })
+    if (
+      !streamingData.defaultStreamingUrl ||
+      !streamingData.permanentStreamingUrl ||
+      !streamingData.temporaryStreamingUrl
+    ) {
+      await sendTelegramLog(
+        `red alert video not scraped - ${episode.episodeId}`,
+        'ongoingAnime'
+      )
+    } else {
+      episode.updatedAt = new Date()
+      console.log('episode refreshed - ', episode.episodeId)
+    }
+    episode.defaultStreamingUrl = streamingData?.defaultStreamingUrl || null
+    episode.permanentStreamingUrl = streamingData?.permanentStreamingUrl || null
+    episode.temporaryStreamingUrl = streamingData?.temporaryStreamingUrl || null
+    return episode
+  })
+
+  const resolvedPromises = await Promise.all(latestEpisodePromises)
+  await Content.findByIdAndUpdate(element._id, {
+    episodes: resolvedPromises,
+    latestEpisode: resolvedPromises.length,
+    lastEpisodeRefreshedAt: new Date(),
+  }).lean(true)
+  await sendTelegramLog(
+    `new episodes updated\n\n${element.contentId}\n\n${element._id}`,
+    'ongoingAnime'
+  )
+}

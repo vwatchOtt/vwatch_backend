@@ -1,6 +1,7 @@
 //Fetch Ongoing Anime Latest Episodes
 const Content = require('../src/schema/content')
-const { scrapeStreamingUrl } = require('../src/thirdParty/gogoAnime/scraping')
+const { refreshAnimeEpisodes } = require('../src/thirdParty/gogoAnime/scraping')
+
 const { resp } = require('../src/utility/resp')
 const { sendTelegramLog } = require('../src/utility/sendTeleLogs')
 
@@ -23,41 +24,11 @@ const worker = async (start, limit, dateFilter) => {
       .lean(true)
     const totalCount = animes.length
     const promises = animes.map(async (element) => {
-      const latestEpisodePromises = element.episodes.map(async (episode) => {
-        const streamingData = await scrapeStreamingUrl({
-          id: episode.episodeId,
-        })
-        if (
-          !streamingData.defaultStreamingUrl ||
-          !streamingData.permanentStreamingUrl ||
-          !streamingData.temporaryStreamingUrl
-        ) {
-          await sendTelegramLog(
-            `red alert video not scraped - ${episode.episodeId}`,
-            'ongoingAnime'
-          )
-        } else {
-          episode.updatedAt = new Date()
-          console.log('episode refreshed - ', episode.episodeId)
-        }
-        episode.defaultStreamingUrl = streamingData?.defaultStreamingUrl || null
-        episode.permanentStreamingUrl =
-          streamingData?.permanentStreamingUrl || null
-        episode.temporaryStreamingUrl =
-          streamingData?.temporaryStreamingUrl || null
-        return episode
-      })
-
-      const resolvedPromises = await Promise.all(latestEpisodePromises)
-      await Content.findByIdAndUpdate(element._id, {
-        episodes: resolvedPromises,
-        latestEpisode: resolvedPromises.length,
-        lastEpisodeRefreshedAt: new Date(),
-      }).lean(true)
-      await sendTelegramLog(
-        `new episodes updated\n\n${element.contentId}\n\n${element._id}`,
-        'ongoingAnime'
-      )
+      try {
+        await refreshAnimeEpisodes(element)
+      } catch (error) {
+        await sendTelegramLog('Error', 'ongoingAnime')
+      }
     })
     await Promise.all(promises)
     await sendTelegramLog(
