@@ -307,7 +307,7 @@ exports.contentById = async (req, res) => {
       )
       ep.lastDuration = obj?.lastDuration || null
       ep.totalDuration = obj?.totalDuration || null
-      ep.finsihedPercentage = obj.finsihedPercentage
+      ep.finsihedPercentage = obj?.finsihedPercentage
       return ep
     })
     return resp.success(res, '', content)
