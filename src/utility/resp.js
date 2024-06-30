@@ -9,6 +9,7 @@ exports.resp = {
     response.json({ message: message, code: 200, success: true, data })
   },
   fail: (response, message, data) => {
+    console.log(message)
     message = message || 'Some error has occured, please try again later'
     response.status(500)
     response.json({
