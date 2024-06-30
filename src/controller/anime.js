@@ -314,7 +314,10 @@ exports.contentById = async (req, res) => {
     return resp.fail(res, error.message)
   }
 }
-
+function calculateWatchedPercentage(totalDuration, watchedDuration) {
+  const percentage = ((totalDuration / watchedDuration) * 100).toFixed()
+  return percentage
+}
 //fetch watch history
 exports.fetchWatchHistory = async (req, res) => {
   try {
@@ -323,6 +326,7 @@ exports.fetchWatchHistory = async (req, res) => {
       {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
+          status: { $ne: 'finished' },
         },
       },
       {
@@ -352,24 +356,34 @@ exports.fetchWatchHistory = async (req, res) => {
         },
       },
     ])
-    const saves = []
+    const finished = []
     const history = []
     data.map((w) => {
       w.image = config.ANIME_THUMBNAIL_BASE_URL + w.image.toString()
-      if (w.history.length > 0) {
-        history.push(w)
+      if (w.status === 'finished') {
+        finished.push(w)
+        return
+      }
+      const finishedCount = w.history.reduce((count, his) => {
+        return his.finishedPercentage >= config.finishedPercentage
+          ? count + 1
+          : count
+      }, 0)
+      if (finishedCount === w.totalEpisodes) {
+        finished.push(w)
       } else {
-        saves.push(w)
+        history.push(w)
       }
     })
     return resp.success(res, '', {
-      watchedContents: history,
+      watchedContents: finished,
       watchHistory: history,
     })
   } catch (error) {
     return resp.fail(res, '', error)
   }
 }
+
 //save content
 exports.watchHistory = async (req, res) => {
   try {
@@ -385,11 +399,16 @@ exports.watchHistory = async (req, res) => {
     const history = watchData?.history || []
     const updateIndex = history.findIndex((ep) => ep.episodeId == episodeId)
     if (episodeId && updateIndex == -1) {
+      const finsihedPercentage = calculateWatchedPercentage(
+        totalDuration,
+        lastDuration
+      )
       history.push({
         lastDuration,
         episodeId,
         episodeNumber,
         totalDuration: totalDuration,
+        finsihedPercentage,
       })
     }
     if (episodeId && updateIndex != -1) {
@@ -427,6 +446,7 @@ exports.getFinishedContents = async (req, res) => {
       {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
+          status: 'finished',
         },
       },
       {
@@ -446,8 +466,6 @@ exports.getFinishedContents = async (req, res) => {
       {
         $project: {
           ...animeSmallBoxProjection['$project'],
-          history: 1,
-          lastWatched: 1,
         },
       },
       {

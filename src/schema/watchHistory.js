@@ -7,6 +7,10 @@ const watchHistorySchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: 'users',
     },
+    status: {
+      type: String,
+      enum: ['in-progress', 'finished'],
+    },
     lastWatched: Number,
     history: [
       {
@@ -14,6 +18,7 @@ const watchHistorySchema = new mongoose.Schema(
         episodeNumber: Number,
         lastDuration: Number,
         totalDuration: Number,
+        finsihedPercentage: Number,
       },
     ],
   },
