@@ -307,6 +307,7 @@ exports.contentById = async (req, res) => {
       )
       ep.lastDuration = obj?.lastDuration || null
       ep.totalDuration = obj?.totalDuration || null
+      ep.finsihedPercentage = obj.finsihedPercentage
       return ep
     })
     return resp.success(res, '', content)
@@ -315,7 +316,7 @@ exports.contentById = async (req, res) => {
   }
 }
 function calculateWatchedPercentage(totalDuration, watchedDuration) {
-  const percentage = ((totalDuration / watchedDuration) * 100).toFixed()
+  const percentage = ((watchedDuration / totalDuration) * 100).toFixed()
   return percentage
 }
 //fetch watch history
@@ -326,7 +327,6 @@ exports.fetchWatchHistory = async (req, res) => {
       {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
-          status: { $ne: 'finished' },
         },
       },
       {
@@ -360,7 +360,7 @@ exports.fetchWatchHistory = async (req, res) => {
     const history = []
     data.map((w) => {
       w.image = config.ANIME_THUMBNAIL_BASE_URL + w.image.toString()
-      if (w.status === 'finished') {
+      if (w.historyStatus === 'finished') {
         finished.push(w)
         return
       }
@@ -398,11 +398,11 @@ exports.watchHistory = async (req, res) => {
       .lean(true)
     const history = watchData?.history || []
     const updateIndex = history.findIndex((ep) => ep.episodeId == episodeId)
+    const finsihedPercentage = calculateWatchedPercentage(
+      totalDuration,
+      lastDuration
+    )
     if (episodeId && updateIndex == -1) {
-      const finsihedPercentage = calculateWatchedPercentage(
-        totalDuration,
-        lastDuration
-      )
       history.push({
         lastDuration,
         episodeId,
@@ -417,6 +417,7 @@ exports.watchHistory = async (req, res) => {
         ...(totalDuration && { totalDuration: totalDuration }),
         ...(lastDuration && { lastDuration }),
         ...(episodeNumber != undefined && { episodeNumber }),
+        finsihedPercentage,
       }
     }
     await watchHistory.findOneAndUpdate(
@@ -446,7 +447,7 @@ exports.getFinishedContents = async (req, res) => {
       {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
-          status: 'finished',
+          historyStatus: 'finished',
         },
       },
       {

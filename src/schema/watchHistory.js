@@ -7,7 +7,7 @@ const watchHistorySchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: 'users',
     },
-    status: {
+    historyStatus: {
       type: String,
       enum: ['in-progress', 'finished'],
     },
