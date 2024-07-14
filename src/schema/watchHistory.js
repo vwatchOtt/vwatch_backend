@@ -18,7 +18,7 @@ const watchHistorySchema = new mongoose.Schema(
         episodeNumber: Number,
         lastDuration: Number,
         totalDuration: Number,
-        finsihedPercentage: Number,
+        finishedPercentage: Number,
       },
     ],
   },

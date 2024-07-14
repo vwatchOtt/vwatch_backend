@@ -4,7 +4,7 @@ const {
   screenNameUpdates,
   messageEvent,
   manageTyping,
-  onBackground,
+  // onBackground,
 } = require('./socketOperations')
 
 const circuitListener = (socket, io) => {
@@ -46,8 +46,27 @@ const circuitListener = (socket, io) => {
       socket.broadcast.to(roomId).emit('room-events', { userId, value, type })
     }
   })
-  socket.on('on-background', () => {
-    onBackground(socket, io)
+  // socket.on('on-background', () => {
+  //   onBackground(socket, io)
+  // })
+  socket.on('reconnect', (attemptNumber) => {
+    console.log('Reconnected to server after', attemptNumber, 'attempts')
+  })
+
+  socket.on('reconnect_attempt', (attemptNumber) => {
+    console.log('Reconnection attempt', attemptNumber)
+  })
+
+  socket.on('reconnecting', (attemptNumber) => {
+    console.log('Reconnecting to server, attempt', attemptNumber)
+  })
+
+  socket.on('reconnect_error', (error) => {
+    console.error('Reconnection error:', error)
+  })
+
+  socket.on('reconnect_failed', () => {
+    console.error('Reconnection failed')
   })
 }
 

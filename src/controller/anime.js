@@ -46,6 +46,7 @@ const linkingContent = async (contents) => {
 const animeSmallBoxProjection = {
   $project: {
     contentId: 1,
+    updatedAt: 1,
     title: {
       $cond: {
         if: { $ne: ['$myAnimeListDescription', null] },
@@ -307,7 +308,7 @@ exports.contentById = async (req, res) => {
       )
       ep.lastDuration = obj?.lastDuration || null
       ep.totalDuration = obj?.totalDuration || null
-      ep.finsihedPercentage = obj?.finsihedPercentage
+      ep.finishedPercentage = obj?.finishedPercentage
       return ep
     })
     return resp.success(res, '', content)
@@ -327,6 +328,7 @@ exports.fetchWatchHistory = async (req, res) => {
       {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
+          historyStatus: { $ne: 'finished' },
         },
       },
       {
@@ -356,29 +358,13 @@ exports.fetchWatchHistory = async (req, res) => {
         },
       },
     ])
-    const finished = []
-    const history = []
-    data.map((w) => {
-      w.image = config.ANIME_THUMBNAIL_BASE_URL + w.image.toString()
-      if (w.historyStatus === 'finished') {
-        finished.push(w)
-        return
+    const history = data.map((w) => {
+      if (!w.image.includes('https')) {
+        w.image = config.ANIME_THUMBNAIL_BASE_URL + w.image.toString()
       }
-      const finishedCount = w.history.reduce((count, his) => {
-        return his.finishedPercentage >= config.finishedPercentage
-          ? count + 1
-          : count
-      }, 0)
-      if (finishedCount === w.totalEpisodes) {
-        finished.push(w)
-      } else {
-        history.push(w)
-      }
+      return w
     })
-    return resp.success(res, '', {
-      watchedContents: finished,
-      watchHistory: history,
-    })
+    return resp.success(res, '', history)
   } catch (error) {
     return resp.fail(res, '', error)
   }
@@ -387,8 +373,14 @@ exports.fetchWatchHistory = async (req, res) => {
 //save content
 exports.watchHistory = async (req, res) => {
   try {
-    const { contentId, lastDuration, episodeId, episodeNumber, totalDuration } =
-      req.body
+    const {
+      contentId,
+      lastDuration,
+      episodeId,
+      episodeNumber,
+      totalDuration,
+      totalEpisodes,
+    } = req.body
     const userId = req.userData._id
     const watchData = await watchHistory
       .findOne({
@@ -398,7 +390,7 @@ exports.watchHistory = async (req, res) => {
       .lean(true)
     const history = watchData?.history || []
     const updateIndex = history.findIndex((ep) => ep.episodeId == episodeId)
-    const finsihedPercentage = calculateWatchedPercentage(
+    const finishedPercentage = calculateWatchedPercentage(
       totalDuration,
       lastDuration
     )
@@ -408,7 +400,7 @@ exports.watchHistory = async (req, res) => {
         episodeId,
         episodeNumber,
         totalDuration: totalDuration,
-        finsihedPercentage,
+        finishedPercentage,
       })
     }
     if (episodeId && updateIndex != -1) {
@@ -417,8 +409,17 @@ exports.watchHistory = async (req, res) => {
         ...(totalDuration && { totalDuration: totalDuration }),
         ...(lastDuration && { lastDuration }),
         ...(episodeNumber != undefined && { episodeNumber }),
-        finsihedPercentage,
+        finishedPercentage,
       }
+    }
+    const finishedCount = history.reduce((count, his) => {
+      return his.finishedPercentage >= config.finishedPercentage
+        ? count + 1
+        : count
+    }, 0)
+    let historyStatus = 'in-progress'
+    if (finishedCount === totalEpisodes) {
+      historyStatus = 'finished'
     }
     await watchHistory.findOneAndUpdate(
       {
@@ -428,6 +429,7 @@ exports.watchHistory = async (req, res) => {
       {
         lastWatched: episodeNumber,
         history,
+        historyStatus,
       },
       {
         upsert: true,
@@ -475,8 +477,11 @@ exports.getFinishedContents = async (req, res) => {
         },
       },
     ])
-
-    return resp.success(res, '', data)
+    const finishedContent = data.map((w) => {
+      w.image = config.ANIME_THUMBNAIL_BASE_URL + w.image.toString()
+      return w
+    })
+    return resp.success(res, '', finishedContent)
   } catch (error) {
     return resp.fail(res, '', error)
   }

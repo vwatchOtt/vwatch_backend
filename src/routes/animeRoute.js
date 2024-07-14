@@ -49,6 +49,6 @@ router.post(
 )
 router.get('/watch-history', verifyToken, fetchWatchHistory)
 router.post('/watch-history', verifyToken, watchHistory)
-router.get('/getFinishedContents', verifyToken, getFinishedContents)
+router.get('/finished-content', verifyToken, getFinishedContents)
 
 module.exports = router
