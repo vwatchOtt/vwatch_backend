@@ -1,3 +1,4 @@
+// const { updateRoom } = require('../firebase/operation')
 const {
   onConnect,
   onDisconnect,
@@ -13,6 +14,12 @@ const circuitListener = (socket, io) => {
   socket.on('disconnect', () => {
     onDisconnect(socket, io)
   })
+  // socket.on('before-disconnect', ({ roomId }) => {
+  //   if (roomId) {
+  //     socket.leave(roomId)
+  //     updateRoom(roomId, socket.userData?._id, 'status', 'out-room')
+  //   }
+  // })
   socket.on('screen-name-updates', ({ lastScreen }) => {
     screenNameUpdates(socket, io, lastScreen)
   })
@@ -34,10 +41,12 @@ const circuitListener = (socket, io) => {
   socket.on('joinRoom', ({ roomId, userId }) => {
     console.log(`User ${userId} joined room (${roomId})`)
     socket.join(roomId) // Join the user to the room
+    // updateRoom(roomId, socket.userData?._id, 'status', 'in-room')
   })
   socket.on('leaveRoom', ({ roomId, userId }) => {
     console.log(`User ${userId} left room ${roomId}`)
     socket.leave(roomId) // Leave the room
+    // updateRoom(roomId, socket.userData?._id, 'status', 'out-room')
   })
   socket.on('roomUpdates', ({ roomId, userId, value, type }) => {
     if (type == 'reaction') {

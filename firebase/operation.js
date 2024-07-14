@@ -48,11 +48,17 @@ const createFireUser = async (userData) => {
     throw error
   }
 }
-const updateRoom = async (roomId, status) => {
-  const roomDocRef = roomCollectionRef.doc(roomId)
+const updateRoom = async (roomId, _id, key, value) => {
+  try {
+    const roomDocRef = roomCollectionRef.doc(roomId)
 
-  // Update the room document with the new data
-  await roomDocRef.update(status)
+    // Update the room document with the new data
+    await roomDocRef.update({
+      [`${_id.toString()}#${key}`]: value,
+    })
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 async function deleteOldDocuments() {

@@ -1,3 +1,4 @@
+// const { updateRoom } = require('../firebase/operation')
 const User = require('../src/schema/users')
 const { triggerNotification } = require('../src/utility/helperFunc')
 const { NOTI_CATEGORIES } = require('../src/utility/notiConstants')
@@ -88,6 +89,7 @@ const markAsDelivered = async (conversationId, message, io) => {
  * - Logs the connection information.
  */
 const onConnect = (socket, io) => {
+  // const roomId = socket.handshake.query?.roomId
   connectedUsers.set(socket.userData?._id.toString(), socket.id)
   const lastScreen = currentScreens.get(socket.userData?._id.toString())
   triggerMyStatusToMyFriends(
@@ -96,6 +98,9 @@ const onConnect = (socket, io) => {
     lastScreen,
     io
   )
+  // if (roomId) {
+  //   // updateRoom(roomId, socket.userData?._id, 'status', 'in-room')
+  // }
   console.log('User Connected', connectedUsers)
 }
 
