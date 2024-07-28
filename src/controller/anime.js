@@ -245,20 +245,15 @@ exports.contentById = async (req, res) => {
   try {
     const { contentId } = req.body
     const dateFilter = new Date()
-    dateFilter.setDate(dateFilter.getDate() - 15)
+    dateFilter.setHours(dateFilter.getHours() - 6)
     const isNeedToUpdate = await Content.findOne({
+      contentId,
       $or: [
-        {
-          contentId,
-          lastEpisodeRefreshedAt: { $exists: false },
-        },
-        {
-          contentId,
-          lastEpisodeRefreshedAt: { $lt: dateFilter },
-        },
+        { lastEpisodeRefreshedAt: { $exists: false } },
+        { lastEpisodeRefreshedAt: { $lt: dateFilter } },
       ],
     })
-      .select({ _id: 1, lastEpisodeRefreshedAt: 1 })
+      .select({ _id: 1 })
       .lean(true)
     if (isNeedToUpdate) {
       await refreshAnimeEpisodes({ contentId, _id: isNeedToUpdate._id })
