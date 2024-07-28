@@ -245,7 +245,7 @@ exports.contentById = async (req, res) => {
   try {
     const { contentId } = req.body
     const dateFilter = new Date()
-    dateFilter.setHours(dateFilter.getHours() - 6)
+    dateFilter.setDate(dateFilter.getDate() - 15)
     const isNeedToUpdate = await Content.findOne({
       contentId,
       $or: [
