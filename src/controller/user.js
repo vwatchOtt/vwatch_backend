@@ -432,3 +432,36 @@ exports.viewProfile = async (req, res) => {
     return resp.fail(res, '', error)
   }
 }
+exports.notificationListing = async (req, res) => {
+  try {
+    let user = await Friends.find(
+      {
+        user: req.userData._id,
+        status: {
+          $in: ['pending', 'waiting-for-acceptance'],
+        },
+      },
+      {
+        _id: 1,
+        status: 1,
+        friend: 1,
+      }
+    )
+      .populate('friend', 'email name _id profilePic username')
+      .lean(true)
+    user = user.map((u) => {
+      return {
+        _id: u.friend._id,
+        email: u.friend.email,
+        name: u.friend.name,
+        profilePic: u.friend.profilePic,
+        username: u.friend.username,
+        friendshipId: u._id,
+        status: u.status,
+      }
+    })
+    return resp.success(res, '', user)
+  } catch (error) {
+    return resp.fail(res, '', error)
+  }
+}

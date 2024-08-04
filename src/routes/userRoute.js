@@ -67,4 +67,11 @@ router.post(
   userController.editMyFriendDetails
 )
 router.get('/viewProfile', Auth.verifyToken, userController.viewProfile)
+
+router.get(
+  '/friend-requests',
+  Auth.verifyToken,
+  userController.notificationListing
+)
+
 module.exports = router
