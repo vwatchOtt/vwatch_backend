@@ -244,20 +244,20 @@ exports.searchAnime = async (req, res) => {
 exports.contentById = async (req, res) => {
   try {
     const { contentId } = req.body
-    const dateFilter = new Date()
-    dateFilter.setDate(dateFilter.getDate() - 15)
-    const isNeedToUpdate = await Content.findOne({
-      contentId,
-      $or: [
-        { lastEpisodeRefreshedAt: { $exists: false } },
-        { lastEpisodeRefreshedAt: { $lt: dateFilter } },
-      ],
-    })
-      .select({ _id: 1 })
-      .lean(true)
-    if (isNeedToUpdate) {
-      await refreshAnimeEpisodes({ contentId, _id: isNeedToUpdate._id })
-    }
+    // const dateFilter = new Date()
+    // dateFilter.setDate(dateFilter.getDate() - 15)
+    // const isNeedToUpdate = await Content.findOne({
+    //   contentId,
+    //   $or: [
+    //     { lastEpisodeRefreshedAt: { $exists: false } },
+    //     { lastEpisodeRefreshedAt: { $lt: dateFilter } },
+    //   ],
+    // })
+    //   .select({ _id: 1 })
+    //   .lean(true)
+    // if (isNeedToUpdate) {
+    //   await refreshAnimeEpisodes({ contentId, _id: isNeedToUpdate._id })
+    // }
 
     let content = await Content.aggregate([
       {
